@@ -6,15 +6,10 @@ import { useHomeStats, useContractUrl } from "@hooks";
 import Link from "next/link";
 import { ADDRESS } from "@contracts";
 import { useChainId } from "wagmi";
-import { shortenAddress } from "@utils";
-import AppPageHeader from "@components/AppPageHeader";
-import localFont from "next/font/local";
+import { shortenAddress } from "../utils";
+import AppPageHeader from "../components/AppPageHeader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
-
-const pixelFont = localFont({
-  src: "../public/fonts/LcdSolid.ttf",
-});
 
 export default function Home() {
   const chainId = useChainId();
@@ -29,17 +24,11 @@ export default function Home() {
       <main className="block">
         <section className="mt-16 grid items-center gap-20 align-middle lg:grid-cols-5">
           <div className="lg:col-span-3">
-            <div className="flex items-center mb-12">
-              <picture className="mr-2">
-                <img src="/assets/logoSquare.svg" alt="logo" className="w-20" />
+            <h1 className="mb-12 text-right text-4xl font-bold">
+              <picture>
+                <img src="/assets/logo.svg" alt="logo" />
               </picture>
-              <h1 className="text-7xl font-bold">FRANKEN</h1>
-              <span
-                className={`${pixelFont.className} font-bold text-6xl mt-2`}
-              >
-                COIN
-              </span>
-            </div>
+            </h1>
 
             <p className="text-lg font-bold">
               The Frankencoin is a collateralized, oracle-free stablecoin that
@@ -93,7 +82,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold mt-6 text-center">
             Frankencoin Token
           </h2>
-          <div className="bg-slate-900 rounded-xl grid grid-cols-2 gap-4 p-4">
+          <div className="bg-slate-900 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <AppBox>
               <p>
                 Frankencoin is a freely transferrable stablecoin that follows
@@ -128,7 +117,7 @@ export default function Home() {
                     />
                   </DisplayLabel>
                 </AppBox>
-                <AppBox className="col-span-3 sm:col-span-2">
+                <AppBox className="col-span-6 sm:col-span-2">
                   <DisplayLabel label="Equity">
                     <DisplayAmount
                       amount={homestats.frankenEquity}
@@ -137,7 +126,7 @@ export default function Home() {
                     />
                   </DisplayLabel>
                 </AppBox>
-                <AppBox className="col-span-3 sm:col-span-2">
+                <AppBox className="col-span-6 sm:col-span-2">
                   <DisplayLabel label="Swap pool">
                     <DisplayAmount
                       amount={homestats.xchfBridgeBal}
@@ -146,7 +135,7 @@ export default function Home() {
                     />
                   </DisplayLabel>
                 </AppBox>
-                <AppBox className="col-span-3 sm:col-span-2">
+                <AppBox className="col-span-6 sm:col-span-2">
                   <DisplayLabel label="Minter Reserve">
                     <DisplayAmount
                       amount={homestats.frankenMinterReserve}
@@ -180,7 +169,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-center">
             Frankencoin Pool Shares (FPS)
           </h2>
-          <div className="bg-slate-900 rounded-xl grid grid-cols-2 gap-4 p-4">
+          <div className="bg-slate-900 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <AppBox>
               <p>
                 The Frankencoin system receives income in the form of fees, and
@@ -288,7 +277,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-center">
             Stablecoin Conversion
           </h2>
-          <div className="bg-slate-900 rounded-xl grid grid-cols-2 gap-4 p-4">
+          <div className="bg-slate-900 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <AppBox>
               <p>
                 Bridge contracts allow to convert other Swiss Franc stablecoins
@@ -353,7 +342,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-center">
             Collateralized Positions
           </h2>
-          <div className="bg-slate-900 rounded-xl grid grid-cols-2 gap-4 p-4">
+          <div className="bg-slate-900 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             <AppBox>
               <p>
                 Collateralized minting positions allow their owner to mint ZCHF
