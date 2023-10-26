@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "yarn install && next dev",
     "build": "next build",
+    "export": "next export",
     "start": "next start",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
