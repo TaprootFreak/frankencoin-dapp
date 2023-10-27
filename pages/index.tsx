@@ -26,7 +26,7 @@ export default function Home() {
           <div className="lg:col-span-3">
             <h1 className="mb-12 text-right text-4xl font-bold">
               <picture>
-                <img src="/assets/logo.svg" alt="logo" />
+                <img src="/frankencoin-dapp/assets/logo.svg" alt="logo" />
               </picture>
             </h1>
 
@@ -72,7 +72,7 @@ export default function Home() {
             <picture>
               <img
                 className="m-auto max-w-lg"
-                src="/assets/logoSquare.svg"
+                src="/frankencoin-dapp/assets/logoSquare.svg"
                 alt="logo"
               />
             </picture>

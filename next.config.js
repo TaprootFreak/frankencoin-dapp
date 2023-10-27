@@ -19,6 +19,9 @@ const nextConfig = {
   swcMinify: true,
   assetPrefix: "/frankencoin-dapp/",
   basePath: "/frankencoin-dapp",
+  images: {
+    unoptimized: true,
+  },
 };
 
 module.exports = nextConfig;

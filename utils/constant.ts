@@ -8,9 +8,9 @@ export const SOCIAL = {
 };
 
 export const TOKEN_LOGO: Record<string, string> = {
-  xchf: "/coin/xchf.svg",
-  zchf: "/coin/zchf.svg",
-  eth: "/coin/eth.svg",
-  vol: "/coin/eth.svg",
-  fps: "/coin/fps.svg",
+  xchf: "/frankencoin-dapp/coin/xchf.svg",
+  zchf: "/frankencoin-dapp/coin/zchf.svg",
+  eth: "/frankencoin-dapp/coin/eth.svg",
+  vol: "/frankencoin-dapp/coin/eth.svg",
+  fps: "/frankencoin-dapp/coin/fps.svg",
 };
