@@ -14,10 +14,11 @@ if (isGithubActions) {
 }
 
 const nextConfig = {
+  output: "export",
   reactStrictMode: true,
   swcMinify: true,
-  assetPrefix,
-  basePath,
+  assetPrefix: "/frankencoin-dapp/",
+  basePath: "/frankencoin-dapp",
 };
 
 module.exports = nextConfig;
