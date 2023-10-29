@@ -15,7 +15,6 @@
     "prettier-watch": "onchange \"**/*\" -- prettier --write --ignore-unknown {{changed}}",
     "deploy": "gh-pages -d build"
   },
-  "homepage": "https://frankencoin.com",
   "dependencies": {
     "@apollo/client": "^3.8.0",
     "@ethersproject/units": "^5.7.0",
