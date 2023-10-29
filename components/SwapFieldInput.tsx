@@ -7,7 +7,7 @@ interface Props {
   label?: string;
   symbol: string;
   placeholder?: string;
-  fromWallet?: boolean;
+  balanceLabel: string;
   max?: bigint;
   digit?: bigint | number;
   hideMaxLabel?: boolean;
@@ -27,7 +27,7 @@ export default function SwapFieldInput({
   symbol,
   max = 0n,
   digit = 18n,
-  fromWallet = true,
+  balanceLabel = "Balance: ",
   hideMaxLabel,
   limit = 0n,
   limitLabel,
@@ -51,7 +51,7 @@ export default function SwapFieldInput({
             }`}
             onClick={() => onChange && onChange(max.toString())}
           >
-            Balance: {" "}
+            {balanceLabel}
             <span className="font-bold text-link">
               {formatBigInt(max)} {symbol}
             </span>

@@ -40,9 +40,8 @@ export default function PositionBorrow({}) {
     (positionStats.reserveContribution * amount) / 1_000_000n;
   const fees = (positionStats.mintingFee * amount) / 1_000_000n;
   const paidOutToWallet = amount - borrowersReserveContribution - fees;
-  const availableAmount = positionStats.limit - positionStats.minted;
-  const userValue =
-    (positionStats.collateralBal * positionStats.liqPrice) / BigInt(1e18);
+  const availableAmount = positionStats.available;
+  const userValue = (positionStats.collateralUserBal * positionStats.liqPrice) / BigInt(1e18);
   const borrowingLimit = min(availableAmount, userValue);
 
   const onChangeAmount = (value: string) => {
@@ -60,6 +59,11 @@ export default function PositionBorrow({}) {
       setError("");
     }
   };
+
+  const onChangeCollateral = (value: string) => {
+    const valueBigInt = BigInt(value);
+    setAmount(valueBigInt * positionStats.liqPrice / BigInt(1e18));
+  }
 
   const { isLoading: approveLoading, writeAsync: approveFranken } =
     useContractWrite({
@@ -185,33 +189,36 @@ export default function PositionBorrow({}) {
       </Head>
       <div>
         <AppPageHeader
-          title="Borrow ZCHF"
+          title="Borrow"
           backText="Back to position"
           backTo={`/position/${position}`}
         />
         <section className="mx-auto flex max-w-2xl flex-col gap-y-4 px-4 sm:px-8">
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col gap-y-4">
             <div className="text-lg font-bold text-center mt-3">
-              Borrow Details
+            Borrow by Cloning an Existing Position
             </div>
             <div className="space-y-8">
               <SwapFieldInput
-                label="Borrow"
+                label="Amount"
+                balanceLabel="Limit:"
                 symbol="ZCHF"
                 error={error}
-                max={borrowingLimit}
+                max={availableAmount}
                 value={amount.toString()}
                 onChange={onChangeAmount}
               />
               <SwapFieldInput
                 showOutput
                 label="Required Collateral"
+                balanceLabel="Your balance:"
+                max={positionStats.collateralUserBal}
+                onChange={onChangeCollateral}
                 output={formatUnits(
                   requiredColl,
                   positionStats.collateralDecimal
                 )}
                 symbol={positionStats.collateralSymbol}
-                hideMaxLabel
               />
               <div className="bg-slate-900 rounded-xl p-4 flex flex-col gap-2">
                 <div className="flex">

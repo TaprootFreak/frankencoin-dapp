@@ -141,16 +141,17 @@ export default function PositionAdjust({}) {
       </Head>
       <div>
         <AppPageHeader
-          title="Adjust Your Position"
+          title="Adjust Position"
           backText="Back to position"
           backTo={`/position/${positionAddr}`}
         />
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col gap-y-4">
-            <div className="text-lg font-bold text-center">Adjust Details</div>
+            <div className="text-lg font-bold text-center">Variables</div>
             <SwapFieldInput
               label="Amount"
               symbol="ZCHF"
+              balanceLabel="Max:"
               max={repayPosition}
               value={amount.toString()}
               onChange={onChangeAmount}
@@ -159,8 +160,9 @@ export default function PositionAdjust({}) {
             />
             <SwapFieldInput
               label="Collateral"
+              balanceLabel="Max:"
               symbol={positionStats.collateralSymbol}
-              max={positionStats.collateralUserBal}
+              max={positionStats.collateralUserBal + positionStats.collateralBal}
               value={collateralAmount.toString()}
               onChange={onChangeCollAmount}
               digit={positionStats.collateralDecimal}
@@ -170,6 +172,7 @@ export default function PositionAdjust({}) {
             />
             <SwapFieldInput
               label="Liquidation Price"
+              balanceLabel="Current Value"
               symbol={"ZCHF"}
               max={positionStats.liqPrice}
               value={liqPrice.toString()}
@@ -177,7 +180,7 @@ export default function PositionAdjust({}) {
               // TODO: Children
             />
             <div className="mx-auto mt-8 w-72 max-w-full flex-col">
-              {collateralAmount > positionStats.collateralPosAllowance ? (
+              {collateralAmount - positionStats.collateralBal > positionStats.collateralPosAllowance ? (
                 <Button
                   isLoading={approveLoading || isConfirming}
                   onClick={() =>
@@ -209,12 +212,12 @@ export default function PositionAdjust({}) {
           </div>
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col gap-y-4">
             <div className="text-lg font-bold text-center">
-              Position Preview
+              Outcome
             </div>
             <div className="bg-slate-900 rounded-xl p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <AppBox>
-                  <DisplayLabel label="Current Amount" />
+                  <DisplayLabel label="Current minted amount" />
                   <DisplayAmount
                     amount={positionStats.minted}
                     currency={"ZCHF"}
@@ -223,7 +226,7 @@ export default function PositionAdjust({}) {
                 <AppBox>
                   <DisplayLabel
                     label={
-                      isNegativeDiff ? "Taken in wallet" : "Received in wallet"
+                      isNegativeDiff ? "Amount you return" : "Amount you receive"
                     }
                   />
                   <DisplayAmount amount={paidOutAmount()} currency={"ZCHF"} />
@@ -232,8 +235,8 @@ export default function PositionAdjust({}) {
                   <DisplayLabel
                     label={
                       isNegativeDiff
-                        ? "Taken from reserve"
-                        : "Reserve contribution"
+                        ? "Returned from reserve"
+                        : "Added to reserve"
                     }
                   />
                   <DisplayAmount
@@ -242,13 +245,13 @@ export default function PositionAdjust({}) {
                   />
                 </AppBox>
                 <AppBox>
-                  <DisplayLabel label="Fee" />
+                  <DisplayLabel label="Deducted fee / interest" />
                   <DisplayAmount amount={fees} currency={"ZCHF"} />
                 </AppBox>
               </div>
               <hr className="my-2 border-dashed border-slate-800" />
               <AppBox>
-                <DisplayLabel label="New Amount" />
+                <DisplayLabel label="Future minted amount" />
                 <DisplayAmount amount={amount} currency={"ZCHF"} />
               </AppBox>
             </div>
