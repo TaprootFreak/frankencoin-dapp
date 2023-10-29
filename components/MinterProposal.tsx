@@ -85,7 +85,7 @@ export default function MinterProposal({ minter, helpers }: Props) {
           </div>
         </div>
       </div>
-      <div className="col-span-6 sm:col-span-1 border-t sm:border-l border-dashed pt-4 sm:pl-4 mt-4 sm:mt-0 flex flex-col">
+      <div className="col-span-6 sm:col-span-1 border-t sm:border-t-0 sm:border-l border-dashed pt-4 sm:pl-4 mt-4 sm:mt-0 flex flex-col">
         <div
           className={`rounded-xl text-white text-center ${
             status == "Passed"
