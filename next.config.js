@@ -17,8 +17,7 @@ const nextConfig = {
   output: "export",
   reactStrictMode: true,
   swcMinify: true,
-  assetPrefix: "/frankencoin-dapp/",
-  basePath: "/frankencoin-dapp",
+  assetPrefix: "/",
   images: {
     unoptimized: true,
   },

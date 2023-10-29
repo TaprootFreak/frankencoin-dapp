@@ -20,7 +20,7 @@ export default function Navbar() {
           <picture>
             <img
               className="h-9 transition"
-              src="/frankencoin-dapp/assets/logoSquare.svg"
+              src="/assets/logoSquare.svg"
               alt="Logo"
             />
           </picture>

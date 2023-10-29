@@ -33,7 +33,7 @@ export default function AppButton({
   ) : (
     <button className={className}>
       {loading && (
-        <AppIcon src="/frankencoin-dapp/assets/loader.svg" size="small" />
+        <AppIcon src="/assets/loader.svg" size="small" />
       )}
       {!loading && icon && <AppIcon src={icon} />}
       {children}
