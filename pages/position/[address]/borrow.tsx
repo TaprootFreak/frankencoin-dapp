@@ -61,8 +61,13 @@ export default function PositionBorrow({}) {
   };
 
   const onChangeCollateral = (value: string) => {
-    const valueBigInt = BigInt(value);
-    setAmount(valueBigInt * positionStats.liqPrice / BigInt(1e18));
+    const valueBigInt = BigInt(value)* positionStats.liqPrice / BigInt(1e18);
+    if (valueBigInt > borrowingLimit){
+      setError("Cannot borrow more than " + borrowingLimit + "." + valueBigInt);
+    } else {
+      setError("");
+    }
+    setAmount(valueBigInt);
   }
 
   const { isLoading: approveLoading, writeAsync: approveFranken } =
