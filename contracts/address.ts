@@ -30,10 +30,10 @@ export const ADDRESS: Record<number, ProtocolAddress> = {
     positionFactory: "0x6ad579D11349d70704df66bc78f84Ae5BBce8D4A",
   },
   [mainnet.id]: {
-    frankenCoin: "0x7a787023f6E18f979B143C79885323a24709B0d8",
-    bridge: "0x4125cD1F826099A4DEaD6b7746F7F28B30d8402B",
+    frankenCoin: "0xB58E61C3098d85632Df34EecfB899A1Ed80921cB",
+    bridge: "0x7bbe8F18040aF0032f4C2435E7a76db6F1E346DF",
     xchf: "0xb4272071ecadd69d933adcd19ca99fe80664fc08",
-    equity: "0x34620625DFfCeBB199331B8599829426a46fd123",
-    mintingHub: "0x0E5Dfe570E5637f7b6B43f515b30dD08FBFCb9ea",
+    equity: "0x1bA26788dfDe592fec8bcB0Eaff472a42BE341B2",
+    mintingHub: "0x7546762fdb1a6d9146b33960545C3f6394265219",
   },
 };

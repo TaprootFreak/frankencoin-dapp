@@ -192,7 +192,7 @@ export default function Governance() {
               </AppBox>
             </div>
             <div className="mt-4 text-lg font-bold text-center">
-              Addresses delegate votes to you:
+              Delegating to You
             </div>
             <div className="bg-slate-900 rounded-xl p-4 grid grid-cols-1 gap-2">
               {delegationStats.delegatedFrom.map((from) => {
@@ -221,13 +221,6 @@ export default function Governance() {
                 );
               })}
             </div>
-            <AppBox className="mt-4">
-              <span className="font-bold">Infobox</span>
-              <div className="text-sm">
-                Delegating your votes does not remove them from you. With 2% of
-                the votes, you get veto power.
-              </div>
-            </AppBox>
           </div>
           <div className="bg-slate-950 rounded-xl p-4">
             <div className="mt-4 text-lg font-bold text-center">Proposals</div>
