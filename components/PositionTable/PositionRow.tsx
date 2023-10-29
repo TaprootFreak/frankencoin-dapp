@@ -25,7 +25,11 @@ export default function PositionRow({ position, collateral }: Props) {
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Liquidation Price</div>
-        <DisplayAmount amount={positionStats.liqPrice} currency={"ZCHF"} />
+        <DisplayAmount
+          amount={positionStats.liqPrice}
+          currency={"ZCHF"}
+          digits={36 - positionStats.collateralDecimal}
+        />
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Available Amount</div>

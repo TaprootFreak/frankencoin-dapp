@@ -99,7 +99,10 @@ export default function PositionChallenge() {
           },
           {
             title: "Price: ",
-            value: formatBigInt(positionStats.liqPrice),
+            value: formatBigInt(
+              positionStats.liqPrice,
+              36 - positionStats.collateralDecimal
+            ),
           },
           {
             title: "Transaction:",
@@ -164,6 +167,7 @@ export default function PositionChallenge() {
                 <DisplayAmount
                   amount={positionStats.liqPrice}
                   currency={"ZCHF"}
+                  digits={36 - positionStats.collateralDecimal}
                 />
               </AppBox>
               <AppBox className="col-span-6 sm:col-span-3">
@@ -171,7 +175,7 @@ export default function PositionChallenge() {
                 <DisplayAmount
                   amount={positionStats.liqPrice * amount}
                   currency={"ZCHF"}
-                  digits={positionStats.collateralDecimal + 18}
+                  digits={36 - positionStats.collateralDecimal + 18}
                 />
               </AppBox>
               <AppBox className="col-span-6 sm:col-span-3">
@@ -241,7 +245,12 @@ export default function PositionChallenge() {
                   liquidation price. If everything gets sold before the phase
                   ends, the challenge is averted and you have effectively sold
                   the provided {positionStats.collateralSymbol} to the bidders
-                  for {formatBigInt(positionStats.liqPrice)} ZCHF per unit.
+                  for{" "}
+                  {formatBigInt(
+                    positionStats.liqPrice,
+                    36 - positionStats.collateralDecimal
+                  )}{" "}
+                  ZCHF per unit.
                 </li>
                 <li>
                   If the challenge is not averted, the fixed price phase is

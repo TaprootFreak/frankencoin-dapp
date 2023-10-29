@@ -65,6 +65,7 @@ export default function PositionDetail() {
                 <DisplayAmount
                   amount={positionStats.collateralBal}
                   currency={positionStats.collateralSymbol}
+                  digits={positionStats.collateralDecimal}
                 />
               </AppBox>
               <AppBox className="col-span-3">
@@ -72,6 +73,7 @@ export default function PositionDetail() {
                 <DisplayAmount
                   amount={positionStats.liqPrice}
                   currency={"ZCHF"}
+                  digits={36 - positionStats.collateralDecimal}
                 />
               </AppBox>
               <AppBox className="col-span-3">
