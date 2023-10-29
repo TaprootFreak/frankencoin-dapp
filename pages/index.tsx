@@ -31,30 +31,8 @@ export default function Home() {
             </h1>
 
             <p className="text-lg font-bold">
-              The Frankencoin is a collateralized, oracle-free stablecoin that
-              tracks the value of the Swiss franc. You are looking at a frontend
-              to an early access version deployed to the&nbsp;
-              <a
-                href="https://etherscan.io/address/0xB50808dEa4Dd28A336D69f4b70AA13c97364B3Fb#code"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Ethereum mainnet
-              </a>
-              .
-            </p>
-            <p>
-              This is an alpha version that contains several critical flaws, as
-              uncovered in a recent&nbsp;
-              <a
-                href="https://code4rena.com/reports/2023-04-frankencoin"
-                target="_blank"
-                rel="noreferrer"
-              >
-                audit competition
-              </a>
-              . As the number of uncovered flaws is higher than anticipated, we
-              are likely to perform another audit soon.
+              Frankencoin is a collateralized, oracle-free stablecoin that tracks the value of the Swiss franc.
+              Its strengths are its decentralization and its versatility.
             </p>
             <p>
               Unlike the minting mechanisms of other collateralized stablecoins,
@@ -64,7 +42,6 @@ export default function Home() {
               sufficient availability on the market. However, its liquidation
               mechanism is slower than that of other collaterlized stablecoins,
               making it less suitable for highly volatile types of collateral.
-              The name is inspired by the system&apos;s self-governing nature.
             </p>
           </div>
 

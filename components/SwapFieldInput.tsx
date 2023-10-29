@@ -7,7 +7,7 @@ interface Props {
   label?: string;
   symbol: string;
   placeholder?: string;
-  balanceLabel: string;
+  balanceLabel?: string;
   max?: bigint;
   digit?: bigint | number;
   hideMaxLabel?: boolean;

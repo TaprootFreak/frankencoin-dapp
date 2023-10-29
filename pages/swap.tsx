@@ -211,7 +211,7 @@ export default function Swap() {
                     isLoading={approveLoading || isConfirming}
                     onClick={() =>
                       approveStableCoin({
-                        args: [ADDRESS[chainId].bridge, "0x8000000000000000000000000000000000000000000000000000000000000000"],
+                        args: [ADDRESS[chainId].bridge, BigInt("0x8000000000000000000000000000000000000000000000000000000000000000")],
                       })
                     }
                   >
