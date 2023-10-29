@@ -39,7 +39,7 @@ export default function Swap() {
             rows={[
               {
                 title: "Amount:",
-                value: formatBigInt(amount) + " XCHF",
+                value: "any",
               },
               {
                 title: "Spender: ",
@@ -211,7 +211,7 @@ export default function Swap() {
                     isLoading={approveLoading || isConfirming}
                     onClick={() =>
                       approveStableCoin({
-                        args: [ADDRESS[chainId].bridge, amount],
+                        args: [ADDRESS[chainId].bridge, "0x8000000000000000000000000000000000000000000000000000000000000000"],
                       })
                     }
                   >
