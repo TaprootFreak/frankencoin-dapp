@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Frankencoin - Home</title>
+        <title>Frankencoin - App</title>
       </Head>
       <main className="block">
         <section className="mt-16 grid items-center gap-20 align-middle lg:grid-cols-5">
@@ -35,13 +35,25 @@ export default function Home() {
               Its strengths are its decentralization and its versatility.
             </p>
             <p>
-              Unlike the minting mechanisms of other collateralized stablecoins,
-              Frankencoin&apos;s auction-based mechanism does not depend on
-              external oracles. It is very flexible with regards to the used
+              Unlike other collateralized stablecoins,
+              Frankencoin&apos;s auction-based liquidation mechanism does not depend on
+              external price sources. It is very flexible with regards to the used
               collateral. In principle, it supports any collateral with
               sufficient availability on the market. However, its liquidation
               mechanism is slower than that of other collaterlized stablecoins,
               making it less suitable for highly volatile types of collateral.
+            </p>
+            <p>
+              The frontend you are looking at provides access to five basic functions of the Frankencoin system.
+              Advanced functions, such as proposing new types of collateral or vetoing proposals must at this point
+              in time be performed manually. The <a href="https://github.com/Frankencoin-ZCHF/frankencoin-dapp">
+                source code of this website</a> is openly available and can be freely
+              copied and modified, just like the underlying <a href="https://github.com/Frankencoin-ZCHF/FrankenCoin">
+              smart contracts</a>. The smart contracts have been audited by
+              <a href="https://github.com/Frankencoin-ZCHF/FrankenCoin/blob/main/audits/blockbite-audit.pdf">Blockbite</a>,
+              <a href="https://code4rena.com/reports/2023-04-frankencoin">Code4rena</a>, and
+              ChainSecurity (to be published soon).
+              Its economic properties have been analyzed as part of a <a href="thesis-preprint-frankencoin.pdf">pending phd thesis</a>.
             </p>
           </div>
 
@@ -55,7 +67,7 @@ export default function Home() {
             </picture>
           </div>
         </section>
-        <section className="bg-slate-950 rounded-xl mt-12 p-4 m-auto flex flex-col gap-2">
+        {/* <section className="bg-slate-950 rounded-xl mt-12 p-4 m-auto flex flex-col gap-2">
           <h2 className="text-2xl font-bold mt-6 text-center">
             Frankencoin Token
           </h2>
@@ -353,7 +365,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
     </>
   );

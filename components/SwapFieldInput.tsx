@@ -53,7 +53,7 @@ export default function SwapFieldInput({
           >
             {balanceLabel}
             <span className="font-bold text-link">
-              {formatBigInt(max)} {symbol}
+              {formatBigInt(max, Number(digit))} {symbol}
             </span>
           </div>
         )}

@@ -176,6 +176,7 @@ export default function PositionAdjust({}) {
               symbol={"ZCHF"}
               max={positionStats.liqPrice}
               value={liqPrice.toString()}
+              digit={36 - positionStats.collateralDecimal}
               onChange={onChangeLiqAmount}
               // TODO: Children
             />
