@@ -81,6 +81,20 @@ export default function PositionChallenge() {
       );
       setPendingTx(data.hash);
     },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
   const { isLoading: challengeLoading, write: challenge } = useContractWrite({
     address: ADDRESS[chainId].mintingHub,
@@ -112,8 +126,22 @@ export default function PositionChallenge() {
       />;
       setPendingTx(data.hash);
     },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
-  const { isLoading: isConfirming } = useWaitForTransaction({
+  const { isLoading: isConfirming, error: txError } = useWaitForTransaction({
     hash: pendingTx,
     enabled: pendingTx != zeroAddress,
     onSuccess(data) {
@@ -134,6 +162,20 @@ export default function PositionChallenge() {
         isLoading: false,
       });
       setPendingTx(zeroAddress);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
 

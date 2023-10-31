@@ -3,7 +3,7 @@ import AppPageHeader from "@components/AppPageHeader";
 import SwapFieldInput from "@components/SwapFieldInput";
 import { useRef, useState } from "react";
 import { useSwapStats } from "@hooks";
-import { Hash, formatUnits, zeroAddress } from "viem";
+import { Hash, formatUnits, zeroAddress, maxUint256 } from "viem";
 import Button from "@components/Button";
 import {
   erc20ABI,
@@ -39,7 +39,7 @@ export default function Swap() {
             rows={[
               {
                 title: "Amount:",
-                value: "any",
+                value: "Max Amount",
               },
               {
                 title: "Spender: ",
@@ -53,6 +53,20 @@ export default function Swap() {
           />
         );
         setPendingTx(data.hash);
+      },
+      onError(error) {
+        const errorLines = error.message.split("\n");
+        toast.warning(
+          <TxToast
+            title="Transaction Failed!"
+            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+              return {
+                title: "",
+                value: line,
+              };
+            })}
+          />
+        );
       },
     });
   const { isLoading: mintLoading, write: mintStableCoin } = useContractWrite({
@@ -81,6 +95,20 @@ export default function Swap() {
       );
       setPendingTx(data.hash);
     },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
   const { isLoading: burnLoading, write: burnStableCoin } = useContractWrite({
     address: ADDRESS[chainId].bridge,
@@ -108,6 +136,20 @@ export default function Swap() {
       );
       setPendingTx(data.hash);
     },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
   const { isLoading: isConfirming } = useWaitForTransaction({
     hash: pendingTx,
@@ -130,6 +172,20 @@ export default function Swap() {
         isLoading: false,
       });
       setPendingTx(zeroAddress);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
 
@@ -211,7 +267,7 @@ export default function Swap() {
                     isLoading={approveLoading || isConfirming}
                     onClick={() =>
                       approveStableCoin({
-                        args: [ADDRESS[chainId].bridge, BigInt("0x8000000000000000000000000000000000000000000000000000000000000000")],
+                        args: [ADDRESS[chainId].bridge, maxUint256],
                       })
                     }
                   >

@@ -91,6 +91,20 @@ export default function Governance() {
       );
       setPendingTx(data.hash);
     },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
   const { isLoading: isConfirming } = useWaitForTransaction({
     hash: pendingTx,
@@ -113,6 +127,20 @@ export default function Governance() {
         isLoading: false,
       });
       setPendingTx(zeroAddress);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
 

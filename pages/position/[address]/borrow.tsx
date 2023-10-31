@@ -14,7 +14,7 @@ import {
   useContractWrite,
   useWaitForTransaction,
 } from "wagmi";
-import { ADDRESS } from "@contracts";
+import { ABIS, ADDRESS } from "@contracts";
 import { formatBigInt, min, shortenAddress } from "@utils";
 import { Id, toast } from "react-toastify";
 import { TxToast } from "@components/TxToast";
@@ -41,7 +41,8 @@ export default function PositionBorrow({}) {
   const fees = (positionStats.mintingFee * amount) / 1_000_000n;
   const paidOutToWallet = amount - borrowersReserveContribution - fees;
   const availableAmount = positionStats.available;
-  const userValue = (positionStats.collateralUserBal * positionStats.liqPrice) / BigInt(1e18);
+  const userValue =
+    (positionStats.collateralUserBal * positionStats.liqPrice) / BigInt(1e18);
   const borrowingLimit = min(availableAmount, userValue);
 
   const onChangeAmount = (value: string) => {
@@ -61,14 +62,14 @@ export default function PositionBorrow({}) {
   };
 
   const onChangeCollateral = (value: string) => {
-    const valueBigInt = BigInt(value)* positionStats.liqPrice / BigInt(1e18);
-    if (valueBigInt > borrowingLimit){
+    const valueBigInt = (BigInt(value) * positionStats.liqPrice) / BigInt(1e18);
+    if (valueBigInt > borrowingLimit) {
       setError("Cannot borrow more than " + borrowingLimit + "." + valueBigInt);
     } else {
       setError("");
     }
     setAmount(valueBigInt);
-  }
+  };
 
   const { isLoading: approveLoading, writeAsync: approveFranken } =
     useContractWrite({
@@ -78,7 +79,7 @@ export default function PositionBorrow({}) {
       onSuccess(data) {
         toastId.current = toast.loading(
           <TxToast
-            title="Approving XCHF"
+            title="Approving ZCHF"
             rows={[
               {
                 title: "Amount:",
@@ -97,46 +98,25 @@ export default function PositionBorrow({}) {
         );
         setPendingTx(data.hash);
       },
+      onError(error) {
+        const errorLines = error.message.split("\n");
+        toast.warning(
+          <TxToast
+            title="Transaction Failed!"
+            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+              return {
+                title: "",
+                value: line,
+              };
+            })}
+          />
+        );
+      },
     });
   const { isLoading: cloneLoading, write: clonePosition } = useContractWrite({
     address: ADDRESS[chainId].mintingHub,
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: "address",
-            name: "position",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "_initialCollateral",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "_initialMint",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "expiration",
-            type: "uint256",
-          },
-        ],
-        name: "clonePosition",
-        outputs: [
-          {
-            internalType: "address",
-            name: "",
-            type: "address",
-          },
-        ],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-    ],
-    functionName: "clonePosition",
+    abi: ABIS.MintingHubABI,
+    functionName: "clone",
     onSuccess(data) {
       toastId.current = toast.loading(
         <TxToast
@@ -161,6 +141,20 @@ export default function PositionBorrow({}) {
         />
       );
       setPendingTx(data.hash);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
   const { isLoading: isConfirming } = useWaitForTransaction({
@@ -201,7 +195,7 @@ export default function PositionBorrow({}) {
         <section className="mx-auto flex max-w-2xl flex-col gap-y-4 px-4 sm:px-8">
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col gap-y-4">
             <div className="text-lg font-bold text-center mt-3">
-            Borrow by Cloning an Existing Position
+              Borrow by Cloning an Existing Position
             </div>
             <div className="space-y-8">
               <SwapFieldInput

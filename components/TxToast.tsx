@@ -10,32 +10,40 @@ export const TxToast = (props: {
 }) => {
   const { title, rows, success = true } = props;
   const { chain } = useNetwork();
+  let reasonLine: number;
 
   return (
     <div className="flex flex-col">
       <div className="font-bold mb-2">{title}</div>
-      {rows.map((row) => (
-        <div
-          className="flex items-center gap-1 justify-between text-sm"
-          key={row.title}
-        >
-          <div>{row.title}</div>
-          {row.hash ? (
-            <Link
-              href={transactionLink(
-                chain?.blockExplorers?.default.url,
-                row.hash
-              )}
-              target="_blank"
-              className="text-link"
-            >
-              {shortenHash(row.hash)}
-            </Link>
-          ) : (
-            <div>{row.value}</div>
-          )}
-        </div>
-      ))}
+      {rows.map((row, i) => {
+        if (row.value?.toString().includes("with the following reason"))
+          reasonLine = i + 1;
+        return (
+          <div
+            className="flex items-center gap-1 justify-between text-sm"
+            style={{ minHeight: 8 }}
+            key={row.title}
+          >
+            {row.title && <div>{row.title}</div>}
+            {row.hash ? (
+              <Link
+                href={transactionLink(
+                  chain?.blockExplorers?.default.url,
+                  row.hash
+                )}
+                target="_blank"
+                className="text-link"
+              >
+                {shortenHash(row.hash)}
+              </Link>
+            ) : (
+              <div className={i == reasonLine ? "font-bold uppercase" : ""}>
+                {row.value}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

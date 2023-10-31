@@ -1,12 +1,12 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Hash, formatUnits, getAddress, zeroAddress } from "viem";
 import { usePositionStats } from "@hooks";
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
 import SwapFieldInput from "@components/SwapFieldInput";
 import DisplayAmount from "@components/DisplayAmount";
-import { abs } from "@utils";
+import { abs, shortenAddress } from "@utils";
 import Button from "@components/Button";
 import {
   erc20ABI,
@@ -15,6 +15,8 @@ import {
   useWaitForTransaction,
 } from "wagmi";
 import { ABIS } from "@contracts";
+import { Id, toast } from "react-toastify";
+import { TxToast } from "@components/TxToast";
 
 export default function PositionAdjust({}) {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function PositionAdjust({}) {
   const [collateralAmount, setCollateralAmount] = useState(0n);
   const [liqPrice, setLiqPrice] = useState(0n);
   const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
+  const toastId = useRef<Id>(0);
   const { address: positionAddr } = router.query;
 
   const { address } = useAccount();
@@ -111,7 +114,43 @@ export default function PositionAdjust({}) {
       abi: erc20ABI,
       functionName: "approve",
       onSuccess(data) {
+        toastId.current = toast.loading(
+          <TxToast
+            title="Approving ZCHF"
+            rows={[
+              {
+                title: "Amount:",
+                value: formatUnits(
+                  collateralAmount,
+                  positionStats.collateralDecimal
+                ),
+              },
+              {
+                title: "Spender: ",
+                value: shortenAddress(position),
+              },
+              {
+                title: "Transaction:",
+                hash: data.hash,
+              },
+            ]}
+          />
+        );
         setPendingTx(data.hash);
+      },
+      onError(error) {
+        const errorLines = error.message.split("\n");
+        toast.warning(
+          <TxToast
+            title="Transaction Failed!"
+            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+              return {
+                title: "",
+                value: line,
+              };
+            })}
+          />
+        );
       },
     });
 
@@ -120,7 +159,47 @@ export default function PositionAdjust({}) {
     abi: ABIS.PositionABI,
     functionName: "adjust",
     onSuccess(data) {
+      toastId.current = toast.loading(
+        <TxToast
+          title="Adjusting Position"
+          rows={[
+            {
+              title: "Amount:",
+              value: formatUnits(amount, 18),
+            },
+            {
+              title: "Collateral Amount:",
+              value: formatUnits(
+                collateralAmount,
+                positionStats.collateralDecimal
+              ),
+            },
+            {
+              title: "Liquidation Price:",
+              value: formatUnits(liqPrice, 18),
+            },
+            {
+              title: "Transaction:",
+              hash: data.hash,
+            },
+          ]}
+        />
+      );
       setPendingTx(data.hash);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
 
@@ -129,6 +208,20 @@ export default function PositionAdjust({}) {
     enabled: pendingTx != zeroAddress,
     onSuccess(data) {
       setPendingTx(zeroAddress);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
     },
   });
 

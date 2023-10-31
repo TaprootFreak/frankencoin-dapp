@@ -7,11 +7,14 @@ import {
 } from "@utils";
 import AppBox from "./AppBox";
 import Link from "next/link";
-import { Address } from "viem";
+import { Address, Hash, zeroAddress } from "viem";
 import { useContractUrl } from "@hooks";
 import Button from "./Button";
-import { useChainId, useContractWrite } from "wagmi";
+import { useChainId, useContractWrite, useWaitForTransaction } from "wagmi";
 import { ADDRESS, ABIS } from "@contracts";
+import { Id, toast } from "react-toastify";
+import { TxToast } from "./TxToast";
+import { useRef, useState } from "react";
 
 interface Props {
   minter: Minter;
@@ -32,6 +35,9 @@ interface Minter {
 }
 
 export default function MinterProposal({ minter, helpers }: Props) {
+  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
+  const toastId = useRef<Id>(0);
+
   const minterUrl = useContractUrl(minter.minter);
   const isVotingFinished = isDateExpired(
     BigInt(minter.applyDate) + BigInt(minter.applicationPeriod)
@@ -48,8 +54,77 @@ export default function MinterProposal({ minter, helpers }: Props) {
     abi: ABIS.FrankencoinABI,
     functionName: "denyMinter",
     args: [minter.minter, helpers, "Bad"],
+    onSuccess(data) {
+      toastId.current = toast.loading(
+        <TxToast
+          title="Vetoing Proposal"
+          rows={[
+            {
+              title: "Reason:",
+              value: "Bad",
+            },
+            {
+              title: "Transaction:",
+              hash: data.hash,
+            },
+          ]}
+        />
+      );
+      setPendingTx(data.hash);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
   });
 
+  const { isLoading: isConfirming } = useWaitForTransaction({
+    hash: pendingTx,
+    enabled: pendingTx != zeroAddress,
+    onSuccess(data) {
+      toast.update(toastId.current, {
+        type: "success",
+        render: (
+          <TxToast
+            title="Transaction Confirmed!"
+            rows={[
+              {
+                title: "Transaction: ",
+                hash: data.transactionHash,
+              },
+            ]}
+          />
+        ),
+        autoClose: 5000,
+        isLoading: false,
+      });
+      setPendingTx(zeroAddress);
+    },
+    onError(error) {
+      const errorLines = error.message.split("\n");
+      toast.warning(
+        <TxToast
+          title="Transaction Failed!"
+          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+            return {
+              title: "",
+              value: line,
+            };
+          })}
+        />
+      );
+    },
+  });
   return (
     <AppBox className="grid grid-cols-6 hover:bg-slate-700 duration-300">
       <div className="col-span-6 sm:col-span-5 pr-4">
@@ -98,7 +173,11 @@ export default function MinterProposal({ minter, helpers }: Props) {
           {status}
         </div>
         {status == "Vetoed" && (
-          <Button onClick={() => veto()} className="mt-auto">
+          <Button
+            onClick={() => veto()}
+            className="mt-auto"
+            isLoading={isLoading || isConfirming}
+          >
             Veto
           </Button>
         )}
