@@ -1,10 +1,9 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { Hash, formatUnits, getAddress, parseUnits, zeroAddress } from "viem";
+import { Hash, formatUnits, getAddress, zeroAddress } from "viem";
 import { usePositionStats } from "@hooks";
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
-import AppBox from "@components/AppBox";
 import SwapFieldInput from "@components/SwapFieldInput";
 import DisplayAmount from "@components/DisplayAmount";
 import { abs } from "@utils";
@@ -15,8 +14,7 @@ import {
   useContractWrite,
   useWaitForTransaction,
 } from "wagmi";
-import { ABIS, ADDRESS } from "@contracts";
-import DisplayLabel from "@components/DisplayLabel";
+import { ABIS } from "@contracts";
 
 export default function PositionAdjust({}) {
   const router = useRouter();
@@ -162,7 +160,9 @@ export default function PositionAdjust({}) {
               label="Collateral"
               balanceLabel="Max:"
               symbol={positionStats.collateralSymbol}
-              max={positionStats.collateralUserBal + positionStats.collateralBal}
+              max={
+                positionStats.collateralUserBal + positionStats.collateralBal
+              }
               value={collateralAmount.toString()}
               onChange={onChangeCollAmount}
               digit={positionStats.collateralDecimal}
@@ -181,7 +181,8 @@ export default function PositionAdjust({}) {
               // TODO: Children
             />
             <div className="mx-auto mt-8 w-72 max-w-full flex-col">
-              {collateralAmount - positionStats.collateralBal > positionStats.collateralPosAllowance ? (
+              {collateralAmount - positionStats.collateralBal >
+              positionStats.collateralPosAllowance ? (
                 <Button
                   isLoading={approveLoading || isConfirming}
                   onClick={() =>
@@ -212,49 +213,41 @@ export default function PositionAdjust({}) {
             </div>
           </div>
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col gap-y-4">
-            <div className="text-lg font-bold text-center">
-              Outcome
-            </div>
-            <div className="bg-slate-900 rounded-xl p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <AppBox>
-                  <DisplayLabel label="Current minted amount" />
-                  <DisplayAmount
-                    amount={positionStats.minted}
-                    currency={"ZCHF"}
-                  />
-                </AppBox>
-                <AppBox>
-                  <DisplayLabel
-                    label={
-                      isNegativeDiff ? "Amount you return" : "Amount you receive"
-                    }
-                  />
-                  <DisplayAmount amount={paidOutAmount()} currency={"ZCHF"} />
-                </AppBox>
-                <AppBox>
-                  <DisplayLabel
-                    label={
-                      isNegativeDiff
-                        ? "Returned from reserve"
-                        : "Added to reserve"
-                    }
-                  />
-                  <DisplayAmount
-                    amount={borrowReserveContribution}
-                    currency={"ZCHF"}
-                  />
-                </AppBox>
-                <AppBox>
-                  <DisplayLabel label="Deducted fee / interest" />
-                  <DisplayAmount amount={fees} currency={"ZCHF"} />
-                </AppBox>
+            <div className="text-lg font-bold text-center">Outcome</div>
+            <div className="bg-slate-900 rounded-xl p-4 flex flex-col gap-2">
+              <div className="flex">
+                <div className="flex-1">Current minted amount</div>
+                <DisplayAmount
+                  amount={positionStats.minted}
+                  currency={"ZCHF"}
+                />
               </div>
-              <hr className="my-2 border-dashed border-slate-800" />
-              <AppBox>
-                <DisplayLabel label="Future minted amount" />
+              <div className="flex">
+                <div className="flex-1">
+                  {isNegativeDiff ? "Amount you return" : "Amount you receive"}
+                </div>
+                <DisplayAmount amount={paidOutAmount()} currency={"ZCHF"} />
+              </div>
+              <div className="flex">
+                <div className="flex-1">
+                  {isNegativeDiff
+                    ? "Returned from reserve"
+                    : "Added to reserve"}
+                </div>
+                <DisplayAmount
+                  amount={borrowReserveContribution}
+                  currency={"ZCHF"}
+                />
+              </div>
+              <div className="flex">
+                <div className="flex-1">Deducted fee / interest</div>
+                <DisplayAmount amount={fees} currency={"ZCHF"} />
+              </div>
+              <hr className="border-slate-700 border-dashed" />
+              <div className="flex font-bold">
+                <div className="flex-1">Future minted amount</div>
                 <DisplayAmount amount={amount} currency={"ZCHF"} />
-              </AppBox>
+              </div>
             </div>
           </div>
         </section>
