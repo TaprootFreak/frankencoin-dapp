@@ -33,7 +33,10 @@ export default function PositionRow({ position, collateral }: Props) {
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Available Amount</div>
-        <DisplayAmount amount={positionStats.available} currency={"ZCHF"} />
+        <DisplayAmount
+          amount={positionStats.limitForClones}
+          currency={"ZCHF"}
+        />
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Expiration Date</div>
