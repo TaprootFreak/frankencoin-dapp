@@ -13,4 +13,6 @@ export const TOKEN_LOGO: Record<string, string> = {
   eth: "/coin/eth.svg",
   vol: "/coin/eth.svg",
   fps: "/coin/fps.svg",
+  lseth: "/coin/lseth.png",
+  realu: "/coin/realu.svg",
 };
