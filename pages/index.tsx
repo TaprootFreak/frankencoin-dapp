@@ -36,9 +36,10 @@ export default function Home() {
               decentralization and its versatility.
             </p>
             <p>
-              Unlike other collateralized stablecoins, Frankencoin&apos;s
-              auction-based liquidation mechanism does not depend on external
-              price sources. It is very flexible with regards to the used
+              Unlike other collateralized stablecoins,
+              <a href="https://etherscan.io/address/0xB58E61C3098d85632Df34EecfB899A1Ed80921cB">
+              Frankencoin&apos;s</a> auction-based liquidation mechanism does not depend on
+              external price sources. It is very flexible with regards to the used
               collateral. In principle, it supports any collateral with
               sufficient availability on the market. However, its liquidation
               mechanism is slower than that of other collaterlized stablecoins,

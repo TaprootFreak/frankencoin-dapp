@@ -19,19 +19,20 @@ import { Id, toast } from "react-toastify";
 import { TxToast } from "@components/TxToast";
 
 export default function PositionAdjust({}) {
+  
   const router = useRouter();
-  const [amountError, setAmountError] = useState("");
-  const [collError, setCollError] = useState("");
-  const [amount, setAmount] = useState(0n);
-  const [collateralAmount, setCollateralAmount] = useState(0n);
-  const [liqPrice, setLiqPrice] = useState(0n);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
   const toastId = useRef<Id>(0);
   const { address: positionAddr } = router.query;
-
   const { address } = useAccount();
   const position = getAddress(String(positionAddr || zeroAddress));
   const positionStats = usePositionStats(position);
+
+  const [amountError, setAmountError] = useState("");
+  const [collError, setCollError] = useState("");
+  const [amount, setAmount] = useState(positionStats.minted);
+  const [collateralAmount, setCollateralAmount] = useState(positionStats.collateralBal);
+  const [liqPrice, setLiqPrice] = useState(positionStats.liqPrice);
+  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
 
   const repayPosition =
     positionStats.minted > positionStats.frankenBalance

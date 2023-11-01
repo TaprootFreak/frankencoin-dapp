@@ -53,7 +53,7 @@ export default function MinterProposal({ minter, helpers }: Props) {
     address: ADDRESS[chainId].frankenCoin,
     abi: ABIS.FrankencoinABI,
     functionName: "denyMinter",
-    args: [minter.minter, helpers, "Bad"],
+    args: [minter.minter, helpers, "No"],
     onSuccess(data) {
       toastId.current = toast.loading(
         <TxToast
@@ -61,7 +61,7 @@ export default function MinterProposal({ minter, helpers }: Props) {
           rows={[
             {
               title: "Reason:",
-              value: "Bad",
+              value: "No",
             },
             {
               title: "Transaction:",
@@ -172,7 +172,7 @@ export default function MinterProposal({ minter, helpers }: Props) {
         >
           {status}
         </div>
-        {status == "Vetoed" && (
+        {status == "Active" && (
           <Button
             onClick={() => veto()}
             className="mt-auto"
