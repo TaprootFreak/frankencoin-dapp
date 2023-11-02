@@ -280,7 +280,7 @@ export default function PositionAdjust({}) {
                 <Button
                   isLoading={approveLoading || isConfirming}
                   onClick={() =>
-                    approveCollateral({ args: [position, collateralAmount] })
+                    approveCollateral({ args: [position, collateralAmount - positionStats.collateralBal] })
                   }
                 >
                   Approve Collateral
