@@ -243,7 +243,7 @@ export default function PositionAdjust({}) {
             <SwapFieldInput
               label="Amount"
               symbol="ZCHF"
-              balanceLabel="Max:"
+              balanceLabel="Min:"
               max={repayPosition}
               value={amount.toString()}
               onChange={onChangeAmount}
