@@ -46,7 +46,7 @@ export default function Navbar() {
           <WalletConnect />
         </div>
 
-        <aside className="flex w-10 h-10 md:hidden">
+        <aside className="flex w-10 h-10 sm:hidden">
           <div className="flex items-center">
             <label
               className="absolute z-[9999] cursor-pointer px-3 py-6"
