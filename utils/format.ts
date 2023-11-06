@@ -100,6 +100,15 @@ export const decodeStringCall = (data: any): string => {
   else return String(data.result);
 };
 
+export const formatDateLocale = (timestamp: number | bigint): string => {
+  const date = dayjs(Number(timestamp) * 1000);
+  return date
+    .toISOString()
+    .replaceAll("-", "")
+    .replaceAll(":", "")
+    .replaceAll(".", "");
+};
+
 export const formatDate = (timestamp: number | bigint): string => {
   const date = dayjs(Number(timestamp) * 1000);
   return date.format("YYYY-MM-DD HH:mm");

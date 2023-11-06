@@ -1,9 +1,9 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 import DisplayAmount from "../DisplayAmount";
 import { usePositionStats } from "@hooks";
-import { formatDate } from "@utils";
-import Link from "next/link";
+import { formatDate, formatDateLocale } from "@utils";
 import TableRow from "../Table/TableRow";
+import { useAccount } from "wagmi";
 
 interface Props {
   position: Address;
@@ -11,7 +11,30 @@ interface Props {
 }
 
 export default function PositionRow({ position, collateral }: Props) {
+  const { address } = useAccount();
   const positionStats = usePositionStats(position, collateral);
+  const account = address || zeroAddress;
+  const isMine = positionStats.owner == account;
+  const calendarLink = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${
+    isMine
+      ? "Repay+Expiring+Frankencoin+Position!"
+      : "Frankencoin+Position+Expiration!"
+  }&dates=${
+    isMine
+      ? formatDateLocale(positionStats.expiration - BigInt(60 * 60 * 24 * 3))
+      : formatDateLocale(positionStats.expiration)
+  }/${
+    isMine
+      ? formatDateLocale(
+          positionStats.expiration - BigInt(60 * 60 * 24 * 3) + 1800n
+        )
+      : formatDateLocale(positionStats.expiration + 1800n)
+  }&details=For+details,+go+here:%0Ahttps://frankencoin.com/position/${position}`;
+
+  const openCalendar = (e: any) => {
+    e.preventDefault();
+    window.open(calendarLink, "_blank");
+  };
 
   return (
     <TableRow link={`/position/${position}`}>
@@ -40,7 +63,9 @@ export default function PositionRow({ position, collateral }: Props) {
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Expiration Date</div>
-        <b>{formatDate(positionStats.expiration)}</b>
+        <div className="underline" onClick={openCalendar}>
+          {formatDate(positionStats.expiration)}
+        </div>
       </div>
     </TableRow>
   );
