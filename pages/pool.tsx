@@ -27,7 +27,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { TxToast } from "@components/TxToast";
 import { Id, toast } from "react-toastify";
-import ReactApexChart from "react-apexcharts";
+import dynamic from "next/dynamic";
+const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Pool() {
   const [amount, setAmount] = useState(0n);
@@ -361,7 +362,7 @@ export default function Pool() {
                   />
                 </div>
               </div>
-              <ReactApexChart
+              <ApexChart
                 type="area"
                 options={{
                   theme: {
