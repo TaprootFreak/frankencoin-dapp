@@ -3,7 +3,12 @@ import AppPageHeader from "@components/AppPageHeader";
 import AppBox from "@components/AppBox";
 import DisplayLabel from "@components/DisplayLabel";
 import DisplayAmount from "@components/DisplayAmount";
-import { usePoolStats, useContractUrl, useFPSQuery } from "@hooks";
+import {
+  usePoolStats,
+  useContractUrl,
+  useFPSQuery,
+  useTradeQuery,
+} from "@hooks";
 import { formatBigInt, formatDuration, shortenAddress } from "@utils";
 import {
   erc20ABI,
@@ -22,6 +27,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { TxToast } from "@components/TxToast";
 import { Id, toast } from "react-toastify";
+import ReactApexChart from "react-apexcharts";
 
 export default function Pool() {
   const [amount, setAmount] = useState(0n);
@@ -35,6 +41,7 @@ export default function Pool() {
   const poolStats = usePoolStats();
   const equityUrl = useContractUrl(ADDRESS[chainId].equity);
   const { profit, loss } = useFPSQuery(ADDRESS[chainId].frankenCoin);
+  const { trades } = useTradeQuery();
   const account = address || zeroAddress;
 
   const { isLoading: approveLoading, writeAsync: approveFranken } =
@@ -267,9 +274,9 @@ export default function Pool() {
                 error={error}
               />
 
-              <div className="py-4 text-center">
+              <div className="py-4 text-center z-0">
                 <button
-                  className={`btn btn-secondary text-slate-800 w-14 h-14 rounded-full transition ${
+                  className={`btn btn-secondary z-0 text-slate-800 w-14 h-14 rounded-full transition ${
                     direction && "rotate-180"
                   }`}
                   onClick={() => setDirection(!direction)}
@@ -337,15 +344,86 @@ export default function Pool() {
             </div>
           </div>
           <div className="bg-slate-950 rounded-xl p-4 grid grid-cols-1 gap-2">
+            <div id="chart-timeline">
+              <div className="flex justify-between">
+                <div>
+                  <DisplayLabel label="FPS Price" />
+                  <DisplayAmount
+                    amount={poolStats.equityPrice}
+                    currency="ZCHF"
+                  />
+                </div>
+                <div className="text-right">
+                  <DisplayLabel label="Supply" />
+                  <DisplayAmount
+                    amount={poolStats.equitySupply}
+                    currency="FPS"
+                  />
+                </div>
+              </div>
+              <ReactApexChart
+                type="area"
+                options={{
+                  theme: {
+                    mode: "dark",
+                    palette: "palette1",
+                  },
+                  chart: {
+                    type: "area",
+                    height: 300,
+                    toolbar: {
+                      show: false,
+                    },
+                    zoom: {
+                      enabled: false,
+                    },
+                    background: "transparent",
+                  },
+                  dataLabels: {
+                    enabled: false,
+                  },
+                  grid: {
+                    borderColor: "#39394a9c",
+                  },
+                  yaxis: {
+                    show: false,
+                  },
+                  xaxis: {
+                    labels: {
+                      show: false,
+                    },
+                    axisTicks: {
+                      show: false,
+                    },
+                  },
+                  fill: {
+                    type: "gradient",
+                    gradient: {
+                      shadeIntensity: 0,
+                      opacityTo: 0,
+                    },
+                  },
+                  tooltip: {
+                    x: {
+                      format: "dd MMM yyyy",
+                    },
+                    theme: "dark",
+                  },
+                }}
+                series={[
+                  {
+                    name: "FPS Price",
+                    data: trades.map((trade, i) => {
+                      return [
+                        parseFloat(trade.time) * 1000,
+                        parseFloat(formatBigInt(BigInt(trade.price), 18, 3)),
+                      ];
+                    }),
+                  },
+                ]}
+              />
+            </div>
             <div className="bg-slate-900 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-              <AppBox>
-                <DisplayLabel label="Supply" />
-                <DisplayAmount amount={poolStats.equitySupply} currency="FPS" />
-              </AppBox>
-              <AppBox>
-                <DisplayLabel label="Price" />
-                <DisplayAmount amount={poolStats.equityPrice} currency="ZCHF" />
-              </AppBox>
               <AppBox>
                 <DisplayLabel label="Market Cap" />
                 <DisplayAmount
