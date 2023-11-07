@@ -390,6 +390,7 @@ export default function Pool() {
                     show: false,
                   },
                   xaxis: {
+                    type: "datetime",
                     labels: {
                       show: false,
                     },
@@ -408,7 +409,6 @@ export default function Pool() {
                     x: {
                       format: "dd MMM yyyy",
                     },
-                    theme: "dark",
                   },
                 }}
                 series={[
