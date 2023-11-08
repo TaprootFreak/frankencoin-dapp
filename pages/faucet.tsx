@@ -1,20 +1,15 @@
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
 import DisplayAmount from "@components/DisplayAmount";
-import {
-  useAccount,
-  useChainId,
-  useContractWrite,
-  useNetwork,
-  useWaitForTransaction,
-} from "wagmi";
+import { useAccount, useChainId, useContractWrite, useNetwork } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { useFaucetStats } from "@hooks";
 import { TOKEN_LOGO } from "@utils";
 import Button from "@components/Button";
 import { ABIS, ADDRESS } from "@contracts";
-import { useRef, useState } from "react";
-import { Address, Hash, parseUnits, zeroAddress } from "viem";
-import { Id, toast } from "react-toastify";
+import { useState } from "react";
+import { Address, parseUnits, zeroAddress } from "viem";
+import { toast } from "react-toastify";
 import { TxToast } from "@components/TxToast";
 import Table from "@components/Table";
 import TableHeader from "@components/Table/TableHead";
@@ -30,95 +25,72 @@ interface RowProps {
 
 export function FaucetRow({ symbol, balance, decimal, addr }: RowProps) {
   const { address } = useAccount();
-  const toastId = useRef<Id>(0);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
   const account = address || zeroAddress;
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  const { isLoading: mintLoading, writeAsync: mint } = useContractWrite({
+  const mintWrite = useContractWrite({
     address: addr,
     abi: ABIS.MockVolABI,
     functionName: "mint",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Fauceting ${symbol}`}
-          rows={[
-            {
-              title: "Amount:",
-              value: "1000 " + symbol,
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
 
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction:",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
-        ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+  const handleFaucet = async () => {
+    const tx = await mintWrite.writeAsync({
+      args: [account, parseUnits("1000", Number(decimal))],
+    });
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: "1000 " + symbol,
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Fauceting ${symbol}`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast
+              title={`Successfully Fauceted ${symbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
 
   return (
     <TableRow
       actionCol={
         <Button
           variant="primary"
-          isLoading={mintLoading || isConfirming}
-          onClick={() =>
-            mint({ args: [account, parseUnits("1000", Number(decimal))] })
-          }
+          isLoading={mintWrite.isLoading || isConfirming}
+          onClick={() => handleFaucet()}
         >
           +1000 {symbol}
         </Button>
