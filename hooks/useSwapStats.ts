@@ -69,9 +69,9 @@ export const useSwapStats = () => {
     : BigInt(0);
   const xchfBridgeBal: bigint = data ? decodeBigIntCall(data[3]) : BigInt(0);
 
-  const frankenUserBal: bigint = data ? decodeBigIntCall(data[4]) : BigInt(0);
+  const zchfUserBal: bigint = data ? decodeBigIntCall(data[4]) : BigInt(0);
   const frankenSymbol: string = data ? String(data[5].result) : "";
-  const frankenUserAllowance: bigint = data
+  const zchfUserAllowance: bigint = data
     ? decodeBigIntCall(data[6])
     : BigInt(0);
 
@@ -83,9 +83,9 @@ export const useSwapStats = () => {
     xchfUserAllowance,
     xchfBridgeBal,
 
-    frankenUserBal,
+    zchfUserBal,
     frankenSymbol,
-    frankenUserAllowance,
+    zchfUserAllowance,
 
     bridgeLimit,
   };

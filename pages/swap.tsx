@@ -1,18 +1,14 @@
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
 import SwapFieldInput from "@components/SwapFieldInput";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useSwapStats } from "@hooks";
-import { Hash, formatUnits, zeroAddress, maxUint256 } from "viem";
+import { formatUnits, maxUint256 } from "viem";
 import Button from "@components/Button";
-import {
-  erc20ABI,
-  useChainId,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { erc20ABI, useChainId, useContractWrite } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS, ADDRESS } from "@contracts";
-import { Id, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { formatBigInt, shortenAddress } from "@utils";
@@ -22,179 +18,190 @@ export default function Swap() {
   const [amount, setAmount] = useState(0n);
   const [error, setError] = useState("");
   const [direction, setDirection] = useState(true);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
-  const toastId = useRef<Id>(0);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const chainId = useChainId();
   const swapStats = useSwapStats();
-  const { isLoading: approveLoading, writeAsync: approveStableCoin } =
-    useContractWrite({
-      address: ADDRESS[chainId].xchf,
-      abi: erc20ABI,
-      functionName: "approve",
-      onSuccess(data) {
-        toastId.current = toast.loading(
-          <TxToast
-            title="Approving XCHF"
-            rows={[
-              {
-                title: "Amount:",
-                value: "Max Amount",
-              },
-              {
-                title: "Spender: ",
-                value: shortenAddress(ADDRESS[chainId].bridge),
-              },
-              {
-                title: "Transaction:",
-                hash: data.hash,
-              },
-            ]}
-          />
-        );
-        setPendingTx(data.hash);
-      },
-      onError(error) {
-        const errorLines = error.message.split("\n");
-        toast.warning(
-          <TxToast
-            title="Transaction Failed!"
-            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-              return {
-                title: "",
-                value: line,
-              };
-            })}
-          />
-        );
-      },
-    });
-  const { isLoading: mintLoading, write: mintStableCoin } = useContractWrite({
+  const approveWrite = useContractWrite({
+    address: ADDRESS[chainId].xchf,
+    abi: erc20ABI,
+    functionName: "approve",
+  });
+  const mintWrite = useContractWrite({
     address: ADDRESS[chainId].bridge,
     abi: ABIS.StablecoinBridgeABI,
     functionName: "mint",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Swapping ${fromSymbol} to ${toSymbol}`}
-          rows={[
-            {
-              title: `${fromSymbol} Amount: `,
-              value: formatBigInt(amount) + " " + fromSymbol,
-            },
-            {
-              title: `${toSymbol} Amount: `,
-              value: formatBigInt(amount) + " " + toSymbol,
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: burnLoading, write: burnStableCoin } = useContractWrite({
+  const burnWrite = useContractWrite({
     address: ADDRESS[chainId].bridge,
     abi: ABIS.StablecoinBridgeABI,
     functionName: "burn",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Swapping ${fromSymbol} to ${toSymbol}`}
-          rows={[
-            {
-              title: `${fromSymbol} Amount: `,
-              value: formatBigInt(amount) + " " + fromSymbol,
-            },
-            {
-              title: `${toSymbol} Amount: `,
-              value: formatBigInt(amount) + " " + toSymbol,
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction: ",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
-        ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+  const handleApprove = async () => {
+    const tx = await approveWrite.writeAsync({
+      args: [ADDRESS[chainId].bridge, maxUint256],
+    });
 
-  const fromBalance = direction
-    ? swapStats.xchfUserBal
-    : swapStats.frankenUserBal;
-  const toBalance = !direction
-    ? swapStats.xchfUserBal
-    : swapStats.frankenUserBal;
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: "Max Amount",
+      },
+      {
+        title: "Spender: ",
+        value: shortenAddress(ADDRESS[chainId].bridge),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title="Approving XCHF" rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Approved XCHF" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
+  const handleMint = async () => {
+    const tx = await mintWrite.writeAsync({ args: [amount] });
+
+    const toastContent = [
+      {
+        title: `${fromSymbol} Amount: `,
+        value: formatBigInt(amount) + " " + fromSymbol,
+      },
+      {
+        title: `${toSymbol} Amount: `,
+        value: formatBigInt(amount) + " " + toSymbol,
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: (
+            <TxToast
+              title={`Swapping ${fromSymbol} to ${toSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        success: {
+          render: (
+            <TxToast
+              title={`Successfully Swapped ${fromSymbol} to ${toSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
+  const handleBurn = async () => {
+    const tx = await burnWrite.writeAsync({ args: [amount] });
+
+    const toastContent = [
+      {
+        title: `${fromSymbol} Amount: `,
+        value: formatBigInt(amount) + " " + fromSymbol,
+      },
+      {
+        title: `${toSymbol} Amount: `,
+        value: formatBigInt(amount) + " " + toSymbol,
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: (
+            <TxToast
+              title={`Swapping ${fromSymbol} to ${toSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        success: {
+          render: (
+            <TxToast
+              title={`Successfully Swapped ${fromSymbol} to ${toSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
+
+  const fromBalance = direction ? swapStats.xchfUserBal : swapStats.zchfUserBal;
+  const toBalance = !direction ? swapStats.xchfUserBal : swapStats.zchfUserBal;
   const fromSymbol = direction ? swapStats.xchfSymbol : swapStats.frankenSymbol;
   const toSymbol = !direction ? swapStats.xchfSymbol : swapStats.frankenSymbol;
   const swapLimit = direction
@@ -264,29 +271,25 @@ export default function Swap() {
               {direction ? (
                 amount > swapStats.xchfUserAllowance ? (
                   <Button
-                    isLoading={approveLoading || isConfirming}
-                    onClick={() =>
-                      approveStableCoin({
-                        args: [ADDRESS[chainId].bridge, maxUint256],
-                      })
-                    }
+                    isLoading={approveWrite.isLoading || isConfirming}
+                    onClick={() => handleApprove()}
                   >
                     Approve
                   </Button>
                 ) : (
                   <Button
                     disabled={amount == 0n || !!error}
-                    isLoading={mintLoading || isConfirming}
-                    onClick={() => mintStableCoin({ args: [amount] })}
+                    isLoading={mintWrite.isLoading || isConfirming}
+                    onClick={() => handleMint()}
                   >
                     Swap
                   </Button>
                 )
               ) : (
                 <Button
-                  isLoading={burnLoading || isConfirming}
+                  isLoading={burnWrite.isLoading || isConfirming}
                   disabled={amount == 0n || !!error}
-                  onClick={() => burnStableCoin({ args: [amount] })}
+                  onClick={() => handleBurn()}
                 >
                   Swap
                 </Button>
