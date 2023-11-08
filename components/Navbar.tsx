@@ -2,6 +2,7 @@ import Link from "next/link";
 import WalletConnect from "./WalletConnect";
 import { useNetwork } from "wagmi";
 import NavButton from "./NavButton";
+import { SOCIAL } from "../utils/constant";
 
 export default function Navbar() {
   const network = useNetwork();
@@ -35,12 +36,14 @@ export default function Navbar() {
           <li>
             <NavButton to="/governance" name="Governance" />
           </li>
-
           {network.chain?.testnet && (
             <li>
               <NavButton to="/faucet" name="Faucet" />
             </li>
           )}
+          <li>
+            <NavButton to={SOCIAL.Docs} name="Docs" external />
+          </li>
         </ul>
         <div className="flex flex-1 justify-end items-center">
           <WalletConnect />
@@ -76,6 +79,9 @@ export default function Navbar() {
                     </li>
                     <li>
                       <NavButton to="/governance" name="Governance" />
+                    </li>
+                    <li>
+                      <NavButton to={SOCIAL.Docs} name="Docs" external />
                     </li>
                   </menu>
                 </div>

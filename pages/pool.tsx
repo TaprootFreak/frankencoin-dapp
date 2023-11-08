@@ -370,6 +370,9 @@ export default function Pool() {
                     },
                     background: "transparent",
                   },
+                  stroke: {
+                    curve: "straight",
+                  },
                   dataLabels: {
                     enabled: false,
                   },
