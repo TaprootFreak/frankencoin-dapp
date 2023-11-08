@@ -16,26 +16,25 @@ import {
   useChainId,
   useContractRead,
   useContractWrite,
-  useWaitForTransaction,
 } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS, ADDRESS } from "@contracts";
 import SwapFieldInput from "@components/SwapFieldInput";
-import { useRef, useState } from "react";
-import { Hash, formatUnits, zeroAddress } from "viem";
+import { useState } from "react";
+import { formatUnits, zeroAddress } from "viem";
 import Button from "@components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { TxToast } from "@components/TxToast";
-import { Id, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Pool() {
   const [amount, setAmount] = useState(0n);
   const [error, setError] = useState("");
-  const toastId = useRef<Id>(0);
   const [direction, setDirection] = useState(true);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const { address } = useAccount();
   const chainId = useChainId();
@@ -45,167 +44,162 @@ export default function Pool() {
   const { trades } = useTradeQuery();
   const account = address || zeroAddress;
 
-  const { isLoading: approveLoading, writeAsync: approveFranken } =
-    useContractWrite({
-      address: ADDRESS[chainId].frankenCoin,
-      abi: erc20ABI,
-      functionName: "approve",
-      onSuccess(data) {
-        toastId.current = toast.loading(
-          <TxToast
-            title={`Approving ZCHF`}
-            rows={[
-              {
-                title: "Amount:",
-                value: formatBigInt(amount) + " ZCHF",
-              },
-              {
-                title: "Spender: ",
-                value: shortenAddress(ADDRESS[chainId].equity),
-              },
-              {
-                title: "Transaction:",
-                hash: data.hash,
-              },
-            ]}
-          />
-        );
-        setPendingTx(data.hash);
-      },
-      onError(error) {
-        const errorLines = error.message.split("\n");
-        toast.warning(
-          <TxToast
-            title="Transaction Failed!"
-            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-              return {
-                title: "",
-                value: line,
-              };
-            })}
-          />
-        );
-      },
-    });
-  const { isLoading: investLoading, write: invest } = useContractWrite({
+  const approveWrite = useContractWrite({
+    address: ADDRESS[chainId].frankenCoin,
+    abi: erc20ABI,
+    functionName: "approve",
+    args: [ADDRESS[chainId].equity, amount],
+  });
+  const investWrite = useContractWrite({
     address: ADDRESS[chainId].equity,
     abi: ABIS.EquityABI,
     functionName: "invest",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Investing ZCHF`}
-          rows={[
-            {
-              title: "Amount:",
-              value: formatBigInt(amount, 18) + " ZCHF",
-            },
-            {
-              title: "Shares: ",
-              value: formatBigInt(result) + " FPS",
-            },
-            {
-              title: "Transaction: ",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: redeemLoading, write: redeem } = useContractWrite({
+  const redeemWrite = useContractWrite({
     address: ADDRESS[chainId].equity,
     abi: ABIS.EquityABI,
     functionName: "redeem",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Redeeming FPS`}
-          rows={[
-            {
-              title: "Amount:",
-              value: formatBigInt(amount) + " FPS",
-            },
-            {
-              title: "Receive: ",
-              value: formatBigInt(result) + " ZCHF",
-            },
-            {
-              title: "Transaction: ",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction: ",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
-        ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+  const handleApprove = async () => {
+    const tx = await approveWrite.writeAsync();
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(amount) + " ZCHF",
+      },
+      {
+        title: "Spender: ",
+        value: shortenAddress(ADDRESS[chainId].equity),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Approving ZCHF`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Approved ZCHF" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
+  const handleInvest = async () => {
+    const tx = await investWrite.writeAsync({ args: [amount, result] });
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(amount, 18) + " ZCHF",
+      },
+      {
+        title: "Shares: ",
+        value: formatBigInt(result) + " FPS",
+      },
+      {
+        title: "Transaction: ",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Investing ZCHF`} rows={toastContent} />,
+        },
+        success: {
+          render: <TxToast title="Successfully Invested" rows={toastContent} />,
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
+  const handleRedeem = async () => {
+    const tx = await redeemWrite.writeAsync({ args: [account, amount] });
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(amount) + " FPS",
+      },
+      {
+        title: "Receive: ",
+        value: formatBigInt(result) + " ZCHF",
+      },
+      {
+        title: "Transaction: ",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Redeeming FPS`} rows={toastContent} />,
+        },
+        success: {
+          render: <TxToast title="Successfully Redeemed" rows={toastContent} />,
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
 
   const { data: fpsResult, isLoading: shareLoading } = useContractRead({
     address: ADDRESS[chainId].equity,
@@ -309,13 +303,9 @@ export default function Pool() {
                 {direction ? (
                   amount > poolStats.frankenAllowance ? (
                     <Button
-                      isLoading={approveLoading || isConfirming}
+                      isLoading={approveWrite.isLoading || isConfirming}
                       disabled={amount == 0n || !!error}
-                      onClick={() =>
-                        approveFranken({
-                          args: [ADDRESS[chainId].equity, amount],
-                        })
-                      }
+                      onClick={() => handleApprove()}
                     >
                       Approve
                     </Button>
@@ -323,8 +313,8 @@ export default function Pool() {
                     <Button
                       variant="primary"
                       disabled={amount == 0n || !!error}
-                      isLoading={investLoading || isConfirming}
-                      onClick={() => invest({ args: [amount, result] })}
+                      isLoading={investWrite.isLoading || isConfirming}
+                      onClick={() => handleInvest()}
                     >
                       Invest
                     </Button>
@@ -332,11 +322,11 @@ export default function Pool() {
                 ) : (
                   <Button
                     variant="primary"
-                    isLoading={redeemLoading || isConfirming}
+                    isLoading={redeemWrite.isLoading || isConfirming}
                     disabled={
                       amount == 0n || !!error || !poolStats.equityCanRedeem
                     }
-                    onClick={() => redeem({ args: [account, amount] })}
+                    onClick={() => handleRedeem()}
                   >
                     Redeem
                   </Button>
