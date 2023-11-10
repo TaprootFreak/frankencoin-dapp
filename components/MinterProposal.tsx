@@ -14,7 +14,7 @@ import { useChainId, useContractWrite } from "wagmi";
 import { waitForTransaction } from "wagmi/actions";
 import { ADDRESS, ABIS } from "@contracts";
 import { toast } from "react-toastify";
-import { TxToast } from "./TxToast";
+import { TxToast, renderErrorToast } from "./TxToast";
 import { useState } from "react";
 
 interface Props {
@@ -81,18 +81,7 @@ export default function MinterProposal({ minter, helpers }: Props) {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }

@@ -10,7 +10,7 @@ import { ABIS, ADDRESS } from "@contracts";
 import { useState } from "react";
 import { Address, parseUnits, zeroAddress } from "viem";
 import { toast } from "react-toastify";
-import { TxToast } from "@components/TxToast";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 import Table from "@components/Table";
 import TableHeader from "@components/Table/TableHead";
 import TableBody from "@components/Table/TableBody";
@@ -66,18 +66,7 @@ export function FaucetRow({ symbol, balance, decimal, addr }: RowProps) {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }

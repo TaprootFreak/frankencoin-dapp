@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { formatBigInt, shortenAddress } from "@utils";
-import { TxToast } from "@components/TxToast";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 
 export default function Swap() {
   const [amount, setAmount] = useState(0n);
@@ -70,18 +70,7 @@ export default function Swap() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }
@@ -126,18 +115,7 @@ export default function Swap() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }
@@ -182,18 +160,7 @@ export default function Swap() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }

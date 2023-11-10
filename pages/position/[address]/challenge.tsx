@@ -6,27 +6,21 @@ import Button from "@components/Button";
 import DisplayAmount from "@components/DisplayAmount";
 import SwapFieldInput from "@components/SwapFieldInput";
 import { usePositionStats } from "@hooks";
-import { Hash, getAddress, zeroAddress } from "viem";
-import { useRef, useState } from "react";
+import { getAddress, zeroAddress } from "viem";
+import { useState } from "react";
 import { formatBigInt, formatDuration, shortenAddress } from "@utils";
-import {
-  erc20ABI,
-  useAccount,
-  useChainId,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { erc20ABI, useAccount, useChainId, useContractWrite } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS, ADDRESS } from "@contracts";
-import { Id, toast } from "react-toastify";
-import { TxToast } from "@components/TxToast";
+import { toast } from "react-toastify";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 import DisplayLabel from "@components/DisplayLabel";
 
 export default function PositionChallenge() {
   const router = useRouter();
   const [amount, setAmount] = useState(0n);
   const [error, setError] = useState("");
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
-  const toastId = useRef<Id>(0);
+  const [isConfirming, setIsConfirming] = useState(false);
   const { address: positionAddr } = router.query;
 
   const chainId = useChainId();
@@ -51,133 +45,117 @@ export default function PositionChallenge() {
     }
   };
 
-  const { isLoading: approveLoading, write: approve } = useContractWrite({
+  const approveWrite = useContractWrite({
     address: positionStats.collateral,
     abi: erc20ABI,
     functionName: "approve",
     args: [ADDRESS[chainId].mintingHub, amount],
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={"Approving " + positionStats.collateralSymbol}
-          rows={[
-            {
-              title: "Amount:",
-              value:
-                formatBigInt(amount, positionStats.collateralDecimal) +
-                " " +
-                positionStats.collateralSymbol,
-            },
-            {
-              title: "Spender: ",
-              value: shortenAddress(ADDRESS[chainId].mintingHub),
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: challengeLoading, write: challenge } = useContractWrite({
+  const challengeWrite = useContractWrite({
     address: ADDRESS[chainId].mintingHub,
     abi: ABIS.MintingHubABI,
     functionName: "challenge",
-    onSuccess(data) {
-      <TxToast
-        title={"Launching a challenge"}
-        rows={[
-          {
-            title: "Size :",
-            value:
-              formatBigInt(amount, positionStats.collateralDecimal) +
-              " " +
-              positionStats.collateralSymbol,
-          },
-          {
-            title: "Price: ",
-            value: formatBigInt(
-              positionStats.liqPrice,
-              36 - positionStats.collateralDecimal
-            ),
-          },
-          {
-            title: "Transaction:",
-            hash: data.hash,
-          },
-        ]}
-      />;
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: isConfirming, error: txError } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction: ",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
+
+  const handleApprove = async () => {
+    const tx = await approveWrite.writeAsync();
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value:
+          formatBigInt(amount, positionStats.collateralDecimal) +
+          " " +
+          positionStats.collateralSymbol,
+      },
+      {
+        title: "Spender: ",
+        value: shortenAddress(ADDRESS[chainId].mintingHub),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: (
+            <TxToast
+              title={`Approving ${positionStats.collateralSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        success: {
+          render: (
+            <TxToast
+              title={`Successfully Approved ${positionStats.collateralSymbol}`}
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
+
+  const handleChallenge = async () => {
+    const tx = await challengeWrite.writeAsync({
+      args: [position, amount, positionStats.liqPrice],
+    });
+
+    const toastContent = [
+      {
+        title: "Size:",
+        value:
+          formatBigInt(amount, positionStats.collateralDecimal) +
+          " " +
+          positionStats.collateralSymbol,
+      },
+      {
+        title: "Price: ",
+        value: formatBigInt(
+          positionStats.liqPrice,
+          36 - positionStats.collateralDecimal
         ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: (
+            <TxToast title={`Launching a challenge`} rows={toastContent} />
+          ),
+        },
+        success: {
+          render: (
+            <TxToast
+              title={`Successfully Launched challenge`}
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
 
   return (
     <>
@@ -248,22 +226,18 @@ export default function PositionChallenge() {
             <div>
               {amount > positionStats.collateralAllowance ? (
                 <Button
-                  isLoading={approveLoading || isConfirming}
+                  isLoading={approveWrite.isLoading || isConfirming}
                   disabled={!!error || account == positionStats.owner}
-                  onClick={() => approve()}
+                  onClick={() => handleApprove()}
                 >
                   Approve
                 </Button>
               ) : (
                 <Button
                   variant="primary"
-                  isLoading={challengeLoading || isConfirming}
+                  isLoading={challengeWrite.isLoading || isConfirming}
                   disabled={!!error || account == positionStats.owner}
-                  onClick={() =>
-                    challenge({
-                      args: [position, amount, positionStats.liqPrice],
-                    })
-                  }
+                  onClick={() => handleChallenge()}
                 >
                   Challenge
                 </Button>

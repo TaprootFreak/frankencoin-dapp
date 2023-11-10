@@ -12,7 +12,7 @@ import { ABIS, ADDRESS } from "@contracts";
 import { useState } from "react";
 import { isAddress, zeroAddress } from "viem";
 import Button from "@components/Button";
-import { TxToast } from "@components/TxToast";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 import { toast } from "react-toastify";
 import AppBox from "@components/AppBox";
 import DisplayLabel from "@components/DisplayLabel";
@@ -91,18 +91,7 @@ export default function Governance() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }

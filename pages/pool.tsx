@@ -25,7 +25,7 @@ import { formatUnits, zeroAddress } from "viem";
 import Button from "@components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import { TxToast } from "@components/TxToast";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -91,18 +91,7 @@ export default function Pool() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }
@@ -137,18 +126,7 @@ export default function Pool() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }
@@ -183,18 +161,7 @@ export default function Pool() {
         },
         error: {
           render(error: any) {
-            const errorLines: string[] = error.message.split("\n");
-            return (
-              <TxToast
-                title="Transaction Failed!"
-                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-                  return {
-                    title: "",
-                    value: line,
-                  };
-                })}
-              />
-            );
+            return renderErrorToast(error);
           },
         },
       }

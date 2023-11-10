@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
 import { useRouter } from "next/router";
@@ -11,7 +11,7 @@ import {
   usePositionStats,
   useContractUrl,
 } from "@hooks";
-import { Hash, formatUnits, getAddress, zeroAddress } from "viem";
+import { formatUnits, getAddress, zeroAddress } from "viem";
 import {
   formatBigInt,
   formatDate,
@@ -21,22 +21,17 @@ import {
 } from "@utils";
 import Link from "next/link";
 import Button from "@components/Button";
-import {
-  erc20ABI,
-  useChainId,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { erc20ABI, useChainId, useContractWrite } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS, ADDRESS } from "@contracts";
-import { Id, toast } from "react-toastify";
-import { TxToast } from "@components/TxToast";
+import { toast } from "react-toastify";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 import DisplayLabel from "@components/DisplayLabel";
 
 export default function ChallengePlaceBid({}) {
   const [amount, setAmount] = useState(0n);
   const [error, setError] = useState("");
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
-  const toastId = useRef<Id>(0);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const router = useRouter();
   const { address, index } = router.query;
@@ -77,117 +72,98 @@ export default function ChallengePlaceBid({}) {
     }
   };
 
-  const { isLoading: approveLoading, write: approveFranken } = useContractWrite(
-    {
-      address: ADDRESS[chainId].xchf,
-      abi: erc20ABI,
-      functionName: "approve",
-      onSuccess(data) {
-        toastId.current = toast.loading(
-          <TxToast
-            title="Approving ZCHF"
-            rows={[
-              {
-                title: "Amount:",
-                value: formatBigInt(expectedZCHF()) + " ZCHF",
-              },
-              {
-                title: "Spender: ",
-                value: shortenAddress(ADDRESS[chainId].mintingHub),
-              },
-              {
-                title: "Transaction:",
-                hash: data.hash,
-              },
-            ]}
-          />
-        );
-        setPendingTx(data.hash);
-      },
-      onError(error) {
-        const errorLines = error.message.split("\n");
-        toast.warning(
-          <TxToast
-            title="Transaction Failed!"
-            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-              return {
-                title: "",
-                value: line,
-              };
-            })}
-          />
-        );
-      },
-    }
-  );
-
-  const { isLoading: bidLoading, write: placeBid } = useContractWrite({
+  const approveWrite = useContractWrite({
+    address: ADDRESS[chainId].xchf,
+    abi: erc20ABI,
+    functionName: "approve",
+  });
+  const bidWrite = useContractWrite({
     address: ADDRESS[chainId].mintingHub,
     abi: ABIS.MintingHubABI,
     functionName: "bid",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Placing a bid`}
-          rows={[
-            {
-              title: `Bid Amount: `,
-              value:
-                formatBigInt(amount, positionStats.collateralDecimal) +
-                " " +
-                positionStats.collateralSymbol,
-            },
-            {
-              title: `Expected ZCHF: `,
-              value: formatBigInt(expectedZCHF()) + " ZCHF",
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction: ",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
-        ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-  });
+
+  const handleApprove = async () => {
+    const tx = await approveWrite.writeAsync({
+      args: [ADDRESS[chainId].mintingHub, expectedZCHF()],
+    });
+
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(expectedZCHF()) + " ZCHF",
+      },
+      {
+        title: "Spender: ",
+        value: shortenAddress(ADDRESS[chainId].mintingHub),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Approving ZCHF`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Approved ZCHF" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
+  const handleBid = async () => {
+    const tx = await bidWrite.writeAsync({
+      args: [Number(challenge?.index || 0n), amount, true],
+    });
+
+    const toastContent = [
+      {
+        title: `Bid Amount: `,
+        value:
+          formatBigInt(amount, positionStats.collateralDecimal) +
+          " " +
+          positionStats.collateralSymbol,
+      },
+      {
+        title: `Expected ZCHF: `,
+        value: formatBigInt(expectedZCHF()) + " ZCHF",
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Placing a bid`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Placed Bid" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
 
   return (
     <>
@@ -269,12 +245,8 @@ export default function ChallengePlaceBid({}) {
             <div className="mx-auto mt-4 w-72 max-w-full flex-col">
               {expectedZCHF() > positionStats.frankenAllowance ? (
                 <Button
-                  isLoading={approveLoading || isConfirming}
-                  onClick={() =>
-                    approveFranken({
-                      args: [ADDRESS[chainId].mintingHub, expectedZCHF()],
-                    })
-                  }
+                  isLoading={approveWrite.isLoading || isConfirming}
+                  onClick={() => handleApprove()}
                 >
                   Approve
                 </Button>
@@ -282,12 +254,8 @@ export default function ChallengePlaceBid({}) {
                 <Button
                   variant="primary"
                   disabled={amount == 0n}
-                  isLoading={bidLoading || isConfirming}
-                  onClick={() =>
-                    placeBid({
-                      args: [Number(challenge?.index || 0n), amount, true],
-                    })
-                  }
+                  isLoading={bidWrite.isLoading || isConfirming}
+                  onClick={() => handleBid()}
                 >
                   Place Bid
                 </Button>

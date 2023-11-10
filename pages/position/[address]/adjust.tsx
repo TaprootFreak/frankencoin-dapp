@@ -1,27 +1,21 @@
 import { useRouter } from "next/router";
-import { useRef, useState } from "react";
-import { Hash, formatUnits, getAddress, zeroAddress } from "viem";
+import { useState } from "react";
+import { formatUnits, getAddress, zeroAddress } from "viem";
 import { usePositionStats } from "@hooks";
 import Head from "next/head";
 import AppPageHeader from "@components/AppPageHeader";
 import SwapFieldInput from "@components/SwapFieldInput";
 import DisplayAmount from "@components/DisplayAmount";
-import { abs, shortenAddress } from "@utils";
+import { abs, formatBigInt, shortenAddress } from "@utils";
 import Button from "@components/Button";
-import {
-  erc20ABI,
-  useAccount,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { erc20ABI, useAccount, useContractWrite } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS } from "@contracts";
-import { Id, toast } from "react-toastify";
-import { TxToast } from "@components/TxToast";
+import { toast } from "react-toastify";
+import { TxToast, renderErrorToast } from "@components/TxToast";
 
-export default function PositionAdjust({}) {
-  
+export default function PositionAdjust() {
   const router = useRouter();
-  const toastId = useRef<Id>(0);
   const { address: positionAddr } = router.query;
   const { address } = useAccount();
   const position = getAddress(String(positionAddr || zeroAddress));
@@ -29,10 +23,12 @@ export default function PositionAdjust({}) {
 
   const [amountError, setAmountError] = useState("");
   const [collError, setCollError] = useState("");
+  const [isConfirming, setIsConfirming] = useState(false);
   const [amount, setAmount] = useState(positionStats.minted);
-  const [collateralAmount, setCollateralAmount] = useState(positionStats.collateralBal);
+  const [collateralAmount, setCollateralAmount] = useState(
+    positionStats.collateralBal
+  );
   const [liqPrice, setLiqPrice] = useState(positionStats.liqPrice);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
 
   const repayPosition =
     positionStats.minted > positionStats.frankenBalance
@@ -109,122 +105,102 @@ export default function PositionAdjust({}) {
     // setError(valueBigInt > fromBalance)
   };
 
-  const { isLoading: approveLoading, write: approveCollateral } =
-    useContractWrite({
-      address: positionStats.collateral,
-      abi: erc20ABI,
-      functionName: "approve",
-      onSuccess(data) {
-        toastId.current = toast.loading(
-          <TxToast
-            title="Approving ZCHF"
-            rows={[
-              {
-                title: "Amount:",
-                value: formatUnits(
-                  collateralAmount,
-                  positionStats.collateralDecimal
-                ),
-              },
-              {
-                title: "Spender: ",
-                value: shortenAddress(position),
-              },
-              {
-                title: "Transaction:",
-                hash: data.hash,
-              },
-            ]}
-          />
-        );
-        setPendingTx(data.hash);
-      },
-      onError(error) {
-        const errorLines = error.message.split("\n");
-        toast.warning(
-          <TxToast
-            title="Transaction Failed!"
-            rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-              return {
-                title: "",
-                value: line,
-              };
-            })}
-          />
-        );
-      },
+  const approveWrite = useContractWrite({
+    address: positionStats.collateral,
+    abi: erc20ABI,
+    functionName: "approve",
+  });
+
+  const handleApprove = async () => {
+    const tx = await approveWrite.writeAsync({
+      args: [position, collateralAmount - positionStats.collateralBal],
     });
 
-  const { isLoading: adjustLoading, write: adjustPos } = useContractWrite({
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(collateralAmount, positionStats.collateralDecimal),
+      },
+      {
+        title: "Spender: ",
+        value: shortenAddress(position),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Approving ZCHF`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Approved ZCHF" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
+  const adjustWrite = useContractWrite({
     address: position,
     abi: ABIS.PositionABI,
     functionName: "adjust",
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title="Adjusting Position"
-          rows={[
-            {
-              title: "Amount:",
-              value: formatUnits(amount, 18),
-            },
-            {
-              title: "Collateral Amount:",
-              value: formatUnits(
-                collateralAmount,
-                positionStats.collateralDecimal
-              ),
-            },
-            {
-              title: "Liquidation Price:",
-              value: formatUnits(liqPrice, 18),
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
+  const handleAdjust = async () => {
+    const tx = await adjustWrite.writeAsync({
+      args: [amount, collateralAmount, liqPrice],
+    });
 
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+    const toastContent = [
+      {
+        title: "Amount:",
+        value: formatBigInt(amount),
+      },
+      {
+        title: "Collateral Amount:",
+        value: formatBigInt(collateralAmount, positionStats.collateralDecimal),
+      },
+      {
+        title: "Liquidation Price:",
+        value: formatBigInt(liqPrice),
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Adjusting Position`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast
+              title="Successfully Adjusted Position"
+              rows={toastContent}
+            />
+          ),
+        },
+        error: {
+          render(error: any) {
+            return renderErrorToast(error);
+          },
+        },
+      }
+    );
+  };
 
   return (
     <>
@@ -278,10 +254,8 @@ export default function PositionAdjust({}) {
               {collateralAmount - positionStats.collateralBal >
               positionStats.collateralPosAllowance ? (
                 <Button
-                  isLoading={approveLoading || isConfirming}
-                  onClick={() =>
-                    approveCollateral({ args: [position, collateralAmount - positionStats.collateralBal] })
-                  }
+                  isLoading={approveWrite.isLoading || isConfirming}
+                  onClick={() => handleApprove()}
                 >
                   Approve Collateral
                 </Button>
@@ -294,12 +268,8 @@ export default function PositionAdjust({}) {
                       ? "You can only adjust your own position"
                       : ""
                   }
-                  isLoading={adjustLoading}
-                  onClick={() =>
-                    adjustPos({
-                      args: [amount, collateralAmount, liqPrice],
-                    })
-                  }
+                  isLoading={adjustWrite.isLoading}
+                  onClick={() => handleAdjust()}
                 >
                   Adjust Position
                 </Button>

@@ -3,6 +3,21 @@ import { useNetwork } from "wagmi";
 import { shortenHash, transactionLink } from "@utils";
 import { Hash } from "viem";
 
+export const renderErrorToast = (error: any) => {
+  const errorLines: string[] = error.message.split("\n");
+  return (
+    <TxToast
+      title="Transaction Failed!"
+      rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+        return {
+          title: "",
+          value: line,
+        };
+      })}
+    />
+  );
+};
+
 export const TxToast = (props: {
   title: string;
   rows: { title: string; value?: string | JSX.Element; hash?: Hash }[];
