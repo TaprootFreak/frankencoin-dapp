@@ -6,28 +6,18 @@ import {
   useGovStats,
   useMinterQuery,
 } from "@hooks";
-import {
-  useAccount,
-  useChainId,
-  useContractWrite,
-  useNetwork,
-  useWaitForTransaction,
-} from "wagmi";
+import { useAccount, useChainId, useContractWrite, useNetwork } from "wagmi";
+import { waitForTransaction } from "wagmi/actions";
 import { ABIS, ADDRESS } from "@contracts";
-import { useRef, useState } from "react";
-import { Hash, isAddress, zeroAddress } from "viem";
+import { useState } from "react";
+import { isAddress, zeroAddress } from "viem";
 import Button from "@components/Button";
 import { TxToast } from "@components/TxToast";
-import { Id, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import AppBox from "@components/AppBox";
 import DisplayLabel from "@components/DisplayLabel";
 import Link from "next/link";
-import {
-  formatBigInt,
-  formatDate,
-  formatDuration,
-  shortenAddress,
-} from "@utils";
+import { shortenAddress } from "@utils";
 import DisplayAmount from "@components/DisplayAmount";
 import MinterProposal from "@components/MinterProposal";
 
@@ -35,8 +25,7 @@ export default function Governance() {
   const [inputField, setInputField] = useState("");
   const [delegator, setDelegator] = useState(zeroAddress);
   const [error, setError] = useState("");
-  const toastId = useRef<Id>(0);
-  const [pendingTx, setPendingTx] = useState<Hash>(zeroAddress);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const { chain } = useNetwork();
   const { address } = useAccount();
@@ -73,76 +62,52 @@ export default function Governance() {
     abi: ABIS.EquityABI,
     functionName: "delegateVoteTo",
     args: [delegator],
-    onSuccess(data) {
-      toastId.current = toast.loading(
-        <TxToast
-          title={`Delegating Votes`}
-          rows={[
-            {
-              title: "Delegate To:",
-              value: delegator,
-            },
-            {
-              title: "Transaction:",
-              hash: data.hash,
-            },
-          ]}
-        />
-      );
-      setPendingTx(data.hash);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
   });
-  const { isLoading: isConfirming } = useWaitForTransaction({
-    hash: pendingTx,
-    enabled: pendingTx != zeroAddress,
-    onSuccess(data) {
-      toast.update(toastId.current, {
-        type: "success",
-        render: (
-          <TxToast
-            title="Transaction Confirmed!"
-            rows={[
-              {
-                title: "Transaction: ",
-                hash: data.transactionHash,
-              },
-            ]}
-          />
-        ),
-        autoClose: 5000,
-        isLoading: false,
-      });
-      setPendingTx(zeroAddress);
-    },
-    onError(error) {
-      const errorLines = error.message.split("\n");
-      toast.warning(
-        <TxToast
-          title="Transaction Failed!"
-          rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
-            return {
-              title: "",
-              value: line,
-            };
-          })}
-        />
-      );
-    },
-  });
+
+  const handleDelegate = async () => {
+    const tx = await delegate();
+
+    const toastContent = [
+      {
+        title: "Delegate To:",
+        value: delegator,
+      },
+      {
+        title: "Transaction:",
+        hash: tx.hash,
+      },
+    ];
+
+    await toast.promise(
+      waitForTransaction({ hash: tx.hash, confirmations: 1 }),
+      {
+        pending: {
+          render: <TxToast title={`Delegating Votes`} rows={toastContent} />,
+        },
+        success: {
+          render: (
+            <TxToast title="Successfully Delegated Votes" rows={toastContent} />
+          ),
+        },
+        error: {
+          render(error: any) {
+            const errorLines: string[] = error.message.split("\n");
+            return (
+              <TxToast
+                title="Transaction Failed!"
+                rows={errorLines.slice(0, errorLines.length - 3).map((line) => {
+                  return {
+                    title: "",
+                    value: line,
+                  };
+                })}
+              />
+            );
+          },
+        },
+      }
+    );
+  };
 
   return (
     <>
@@ -175,7 +140,7 @@ export default function Governance() {
                   <Button
                     isLoading={isLoading || isConfirming}
                     disabled={delegator == zeroAddress || !!error}
-                    onClick={() => delegate()}
+                    onClick={() => handleDelegate()}
                   >
                     Set
                   </Button>
