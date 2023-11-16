@@ -15,4 +15,5 @@ export const TOKEN_LOGO: Record<string, string> = {
   fps: "/coin/fps.svg",
   lseth: "/coin/lseth.png",
   realu: "/coin/realu.svg",
+  boss: "/coin/boss.png",
 };

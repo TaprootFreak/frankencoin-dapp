@@ -27,7 +27,7 @@ export default function DisplayAmount({
         <picture className="mr-2">
           <img
             src={TOKEN_LOGO[currency.toLowerCase()]}
-            className="w-8"
+            className="w-8 h-8 rounded-full"
             alt="token-logo"
           />
         </picture>
