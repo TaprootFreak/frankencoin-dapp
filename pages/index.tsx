@@ -36,13 +36,18 @@ export default function Home() {
               decentralization and its versatility.
             </p>
             <p>
-              Unlike other collateralized stablecoins,
-              <a href="https://etherscan.io/address/0xB58E61C3098d85632Df34EecfB899A1Ed80921cB">
-              Frankencoin&apos;s</a> auction-based liquidation mechanism does not depend on
-              external price sources. It is very flexible with regards to the used
+              Unlike other collateralized stablecoins,&nbsp;
+              <a
+                href="https://etherscan.io/address/0xB58E61C3098d85632Df34EecfB899A1Ed80921cB"
+                target="_blank"
+              >
+                Frankencoin&apos;s
+              </a>{" "}
+              auction-based liquidation mechanism does not depend on external
+              price sources. It is very flexible with regards to the used
               collateral. In principle, it supports any collateral with
               sufficient availability on the market. However, its liquidation
-              mechanism is slower than that of other collaterlized stablecoins,
+              mechanism is slower than that of other collateralized stablecoins,
               making it less suitable for highly volatile types of collateral.
             </p>
             <p>
@@ -50,24 +55,42 @@ export default function Home() {
               functions of the Frankencoin system. Advanced functions, such as
               proposing new types of collateral or vetoing proposals must at
               this point in time be performed manually. The{" "}
-              <a href="https://github.com/Frankencoin-ZCHF/frankencoin-dapp">
+              <a
+                href="https://github.com/Frankencoin-ZCHF/frankencoin-dapp"
+                target="_blank"
+              >
                 source code of this website
               </a>{" "}
               is openly available and can be freely copied and modified, just
               like the underlying{" "}
-              <a href="https://github.com/Frankencoin-ZCHF/FrankenCoin">
+              <a
+                href="https://github.com/Frankencoin-ZCHF/FrankenCoin"
+                target="_blank"
+              >
                 smart contracts
               </a>
               . The smart contracts have been audited by&nbsp;
-              <a href="https://github.com/Frankencoin-ZCHF/FrankenCoin/blob/main/audits/blockbite-audit.pdf">
+              <a
+                href="https://github.com/Frankencoin-ZCHF/FrankenCoin/blob/main/audits/blockbite-audit.pdf"
+                target="_blank"
+              >
                 Blockbite
               </a>
               ,&nbsp;
-              <a href="https://code4rena.com/reports/2023-04-frankencoin">
+              <a
+                href="https://code4rena.com/reports/2023-04-frankencoin"
+                target="_blank"
+              >
                 Code4rena
               </a>
-              , and ChainSecurity (to be published soon). Its economic
-              properties have been analyzed as part of a{" "}
+              , and&nbsp;
+              <a
+                href="https://chainsecurity.com/security-audit/frankencoin-smart-contracts/"
+                target="_blank"
+              >
+                ChainSecurity
+              </a>
+              . Its economic properties have been analyzed as part of a{" "}
               <a href="thesis-preprint-frankencoin.pdf">pending phd thesis</a>.
             </p>
           </div>
