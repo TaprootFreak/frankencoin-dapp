@@ -103,6 +103,7 @@ export default function PositionDetail() {
                   amount={positionStats.reserveContribution / 100n}
                   digits={2}
                   currency={"%"}
+                  hideLogo
                 />
               </AppBox>
               <AppBox className="col-span-2 sm:col-span-2">
@@ -111,6 +112,7 @@ export default function PositionDetail() {
                   amount={positionStats.mintingFee / 100n}
                   digits={2}
                   currency={"%"}
+                  hideLogo
                 />
               </AppBox>
             </div>

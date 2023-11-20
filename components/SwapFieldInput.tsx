@@ -2,7 +2,8 @@ import { useAccount } from "wagmi";
 import DisplayAmount from "./DisplayAmount";
 import { formatBigInt } from "@utils";
 import { BigNumberInput } from "./BigNumberInput";
-import TokenLogo from "./TokenLogo";
+import dynamic from "next/dynamic";
+const TokenLogo = dynamic(() => import("./TokenLogo"), { ssr: false });
 
 interface Props {
   label?: string;
