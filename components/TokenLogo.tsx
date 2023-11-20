@@ -19,7 +19,7 @@ export default function TokenLogo({ currency, size = 8 }: Props) {
     }
   };
   return imgExist ? (
-    <picture className="mr-2 w-8 h-8">
+    <picture className="mr-2">
       <img
         src={src}
         className={`w-${size} h-${size} rounded-full`}

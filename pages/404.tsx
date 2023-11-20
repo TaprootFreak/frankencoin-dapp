@@ -9,6 +9,8 @@ export default function Custom404() {
         <title>Frankencoin - 404</title>
       </Head>
 
+      {/* To load dynamic classes */}
+      <div className="hidden w-8 h-8 w-10 h-10" />
       <div
         className="flex flex-col items-center justify-center w-full text-center"
         style={{ height: "60vh" }}
