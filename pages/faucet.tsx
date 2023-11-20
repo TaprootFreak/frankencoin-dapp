@@ -4,7 +4,6 @@ import DisplayAmount from "@components/DisplayAmount";
 import { useAccount, useChainId, useContractWrite, useNetwork } from "wagmi";
 import { waitForTransaction } from "wagmi/actions";
 import { useFaucetStats } from "@hooks";
-import { TOKEN_LOGO } from "@utils";
 import Button from "@components/Button";
 import { ABIS, ADDRESS } from "@contracts";
 import { useState } from "react";
@@ -15,6 +14,7 @@ import Table from "@components/Table";
 import TableHeader from "@components/Table/TableHead";
 import TableBody from "@components/Table/TableBody";
 import TableRow from "@components/Table/TableRow";
+import TokenLogo from "@components/TokenLogo";
 
 interface RowProps {
   addr: Address;
@@ -87,14 +87,10 @@ export function FaucetRow({ symbol, balance, decimal, addr }: RowProps) {
     >
       <div>
         <div className="text-gray-400 md:hidden">Token</div>
-        <picture className="mr-2 flex items-center">
-          <img
-            src={TOKEN_LOGO[symbol.toLowerCase()]}
-            className="w-8"
-            alt="token-logo"
-          />
+        <div className="flex items-center">
+          <TokenLogo currency={symbol} size={10} />
           <span className="ml-2 font-bold">{symbol}</span>
-        </picture>
+        </div>
       </div>
       <div>
         <div className="text-gray-400 md:hidden">Decimals</div>

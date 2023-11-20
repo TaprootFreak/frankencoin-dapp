@@ -1,7 +1,8 @@
 import { useAccount } from "wagmi";
 import DisplayAmount from "./DisplayAmount";
-import { TOKEN_LOGO, formatBigInt } from "@utils";
+import { formatBigInt } from "@utils";
 import { BigNumberInput } from "./BigNumberInput";
+import TokenLogo from "./TokenLogo";
 
 interface Props {
   label?: string;
@@ -60,17 +61,7 @@ export default function SwapFieldInput({
       </div>
 
       <div className="flex items-center rounded-lg bg-slate-800 p-2">
-        {TOKEN_LOGO[symbol.toLowerCase()] && (
-          <div className="hidden w-12 sm:block">
-            <picture>
-              <img
-                src={TOKEN_LOGO[symbol.toLowerCase()]}
-                className="w-10"
-                alt="token-logo"
-              />
-            </picture>
-          </div>
-        )}
+        <TokenLogo currency={symbol} size={10} />
         <div className="flex-1">
           {showOutput ? (
             <div className="px-3 py-2 font-bold transition-opacity">

@@ -1,4 +1,6 @@
-import { TOKEN_LOGO, formatBigInt } from "@utils";
+import { formatBigInt } from "@utils";
+import dynamic from "next/dynamic";
+const TokenLogo = dynamic(() => import("./TokenLogo"), { ssr: false });
 
 interface Props {
   amount: bigint;
@@ -23,15 +25,7 @@ export default function DisplayAmount({
 }: Props) {
   return (
     <div className={`flex items-center ${className}`}>
-      {!hideLogo && currency && TOKEN_LOGO[currency.toLowerCase()] && (
-        <picture className="mr-2">
-          <img
-            src={TOKEN_LOGO[currency.toLowerCase()]}
-            className="w-8 h-8 rounded-full"
-            alt="token-logo"
-          />
-        </picture>
-      )}
+      {!hideLogo && currency && <TokenLogo currency={currency} />}
       <div>
         <span className={`${bold && "font-bold"} ${big && "text-3xl"}`}>
           {formatBigInt(amount, Number(digits))}

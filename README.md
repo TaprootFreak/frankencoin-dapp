@@ -10,8 +10,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Configurations for new collateral token
 
-1. Add token logo in svg or png format under `public/coin/` folder.
-2. Add token logo path in `utils/constant.ts` file. e.g
+1. Add token logo in **svg** or **png** format under `public/coin/` folder.
+2. Make sure logo file name should be in lower case and same as real token symbol.
 
 ```
 xchf: "/coin/xchf.svg"

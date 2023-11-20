@@ -6,14 +6,3 @@ export const SOCIAL = {
   Forum: "https://github.com/Frankencoin-ZCHF/Frankencoin/discussions",
   Docs: "https://docs.frankencoin.com/",
 };
-
-export const TOKEN_LOGO: Record<string, string> = {
-  xchf: "/coin/xchf.svg",
-  zchf: "/coin/zchf.svg",
-  eth: "/coin/eth.svg",
-  vol: "/coin/eth.svg",
-  fps: "/coin/fps.svg",
-  lseth: "/coin/lseth.png",
-  realu: "/coin/realu.svg",
-  boss: "/coin/boss.png",
-};
